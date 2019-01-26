@@ -29,6 +29,11 @@ def store_as_hdf5(data):
     pass
 
 
+def vehicle_detected(a):
+    """ a is a numpy array of arbitrary length. method returns true if there is a vehicle """
+    pass
+
+
 def process_data(data):
     """
     def process_single_beam_data(data):
@@ -41,9 +46,16 @@ def process_data(data):
         pass
     """
     
+    processed_vehicles = []
+    count = 0 # consecutive measurements with a vehicle detected
+    
+    
     # data[time][position], measurement is a data capture at a specific time
-    for measurement in data:
-        pass
+    for measurement in data: # go through measurements identifying vehicles; if vehicle is found, process and add to list
+        if(vehicle_detected(measurement)):
+            processed_vehicles.append(process_data(measurement))
+    
+    return processed_vehicles
     
 def main():
     data_to_process = read_in_data() # array
