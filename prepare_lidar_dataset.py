@@ -19,7 +19,7 @@ def read_in_data():
     pass
 
 
-def process_vehicle():
+def normalize_vehicle():
     """ takes in numpy array of vehicle data, processes it, returns numpy array of vehicle data """
     pass
 
@@ -48,12 +48,45 @@ def process_data(data):
     
     processed_vehicles = []
     count = 0 # consecutive measurements with a vehicle detected
+    current_vehicle =[]
     
     
     # data[time][position], measurement is a data capture at a specific time
     for measurement in data: # go through measurements identifying vehicles; if vehicle is found, process and add to list
+        
+        
+        
         if(vehicle_detected(measurement)):
-            processed_vehicles.append(process_data(measurement))
+            count+=1
+            
+        elif(count > 0):
+            count-=1
+            
+        else:
+            count = 0
+            
+        if(count > DETECTION_THRESHOLD):
+            
+            for i in range(DETECTION_THRESHOLD): # add previous points to vehicle
+                current_vehicle.append(previous )
+            
+            
+            current_vehicle.append(measurement)
+            
+            
+            
+        if(recording_vehicle): # add data point to current vehicle
+            
+            current_vehicle.append(measurement)
+            
+        
+        if(count == 0): # stop recording vehicle
+            
+            processed_vehicles.append(normalize_vehicle(current_vehicle))
+    
+    
+    
+    
     
     return processed_vehicles
     
@@ -66,9 +99,9 @@ def main():
         processed_data = process_scanning_data(data_to_process)
     """
     
-    processed_data = process_data(data_to_process)
+    processed_vehicles = processed_vehicles(data_to_process)
 
-    store_as_hdf5(processed_data)
+    store_as_hdf5(processed_vehicles)
     
     
     
