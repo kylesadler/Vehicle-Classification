@@ -11,33 +11,52 @@ import h5py
 """
 
 def read_in_data():
-    """ reads in data from file, returns a 2D numpy array of data (even if data is only 1D) """
+    """ reads in data from file, returns a numpy array of data """
     """
-        temporal axis is vertical, spatial axis (vertical in real life) is horizontal with "up" being
+        for 2D array temporal axis is vertical, spatial axis (vertical in real life) is horizontal
         array[time][location]
     """
     pass
+
 
 def process_vehicle():
     """ takes in numpy array of vehicle data, processes it, returns numpy array of vehicle data """
     pass
 
-def store_as_hdf5():
+
+def store_as_hdf5(data):
     """ stores the numpy array as hdf5 file """
     pass
 
-def detect_vehicles():
-    """ returns an array of starting and ending indices of vehicles, given a numpy array of raw data """
-    pass
 
+def process_data(data):
+    """
+    def process_single_beam_data(data):
+        "" takes in 1D numpy array data and extracts vehicles, normalizes, ect. returns processed data ""
+        pass
+
+    
+    def process_scanning_data(data):
+        "" takes in 2D numpy array data and extracts vehicles, normalizes, ect. returns processed data ""
+        pass
+    """
+    
+    # data[time][position], measurement is a data capture at a specific time
+    for measurement in data:
+        pass
+    
 def main():
-    data_to_process = read_in_data() # array?
+    data_to_process = read_in_data() # array
     
+    """if(SINGLE_BEAM_LIDAR):
+        processed_data = process_single_beam_data(data_to_process)
+    else:
+        processed_data = process_scanning_data(data_to_process)
+    """
     
-    for data in data_to_process:
-        
-    
-    
+    processed_data = process_data(data_to_process)
+
+    store_as_hdf5(processed_data)
     
     
     
