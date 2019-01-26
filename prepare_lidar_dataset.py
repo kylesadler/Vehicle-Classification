@@ -47,7 +47,7 @@ def process_data(data):
     """
     
     processed_vehicles = []
-    count = 0 # consecutive measurements with a vehicle detected
+    count = 0 # consecutive measurements with a vehicle detected, ranges from 0-10
     current_vehicle =[]
     
     
@@ -71,8 +71,7 @@ def process_data(data):
                 current_vehicle.append(previous )
             
             
-            current_vehicle.append(measurement)
-            
+            recording_vehicle = True            
             
             
         if(recording_vehicle): # add data point to current vehicle
@@ -80,12 +79,10 @@ def process_data(data):
             current_vehicle.append(measurement)
             
         
-        if(count == 0): # stop recording vehicle
+        elif(len(current_vehicle) != 0): # stop recording vehicle
             
             processed_vehicles.append(normalize_vehicle(current_vehicle))
-    
-    
-    
+            current_vehicle = []
     
     
     return processed_vehicles
