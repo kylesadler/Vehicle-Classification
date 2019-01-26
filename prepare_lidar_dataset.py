@@ -11,11 +11,15 @@ import h5py
 """
 
 def read_in_data():
-    """ reads in data from file, returns a numpy array of data """
+    """ reads in data from file, returns a 2D numpy array of data (even if data is only 1D) """
+    """
+        temporal axis is vertical, spatial axis (vertical in real life) is horizontal with "up" being
+        array[time][location]
+    """
     pass
 
-def process_data():
-    """ takes in numpy array of data, processes it, returns numpy array of data """
+def process_vehicle():
+    """ takes in numpy array of vehicle data, processes it, returns numpy array of vehicle data """
     pass
 
 def store_as_hdf5():
@@ -23,8 +27,38 @@ def store_as_hdf5():
     pass
 
 def detect_vehicles():
-    """ returns an array of starting and ending indeces of vehicles, given a numpy array of raw data """
+    """ returns an array of starting and ending indices of vehicles, given a numpy array of raw data """
     pass
 
 def main():
-    pass
+    data_to_process = read_in_data() # array?
+    
+    
+    for data in data_to_process:
+        
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
