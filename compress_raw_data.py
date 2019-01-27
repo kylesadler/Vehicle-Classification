@@ -41,31 +41,33 @@ if not os.path.exists(OUTPUT_DIR): # make OUTPUT_DIR if it doesn't exist
 
 def main():
     
-    while(True):
-        # get all files in directory
-        files_in_dir = os.listdir(INPUT_DIR) 
-        
-        # sleeps for MIN_TO_SLEEP, let files_in_dir finish writing
-        sleep(60 * MIN_TO_SLEEP);
-        
-        files_to_compress = get_files_to_compress(files_in_dir)
+    compressed_data_file_name = str(datetime.now()).replace("-","").replace(":","").replace(" ","").replace(".","")
 
-        assert(files_to_compress != None)
+    
+    while(True):
+        
+        # get all files to compress in directory
+        files_to_compress = get_files_to_compress(os.listdir(INPUT_DIR))
         
         if(len(files_to_compress) == 0):
             continue
         
+        # sleeps for MIN_TO_SLEEP, let files_to_compress finish writing
+        sleep(60 * MIN_TO_SLEEP);
+
+            
         files_to_compress.sort() # ensures that data is in correct order
-        
-        compressed_data_file_name = get_name(files_to_compress[0])
+        dataset_name = get_name(files_to_compress[0])
         compressed_data = [] # data for the entire loop of files
         files_to_delete =[]
         
+        
         try: # to initialize compressed_data_file
-            compressed_data_file = h5py.File(os.path.join(OUTPUT_DIR, compressed_data_file_name + ".h5"), 'w')
+            compressed_data_file = h5py.File(os.path.join(OUTPUT_DIR, compressed_data_file_name + ".h5"), 'a')
         except:
             log_error("could not create compressed data file: " + compressed_data_file_name)
             raise Exception("well shit")
+        
         
         
         
@@ -83,8 +85,7 @@ def main():
             # loop through input file, compress each line, and write to output file
             while(line != ""):
                 try: # to compress line
-                    compressed_line = parse_line(line)
-                    compressed_data.append(compressed_line)
+                    compressed_data.append(parse_line(line))
                 except Exception as e:
                     log_warning("could not parse line in file: " + input_file.name + ": " + line)
                 
@@ -92,19 +93,21 @@ def main():
                     
             input_file.close()
             files_to_delete.append(file)
-            print("processing file " + file)
+            print("compressing file " + file)
             
             
+        
+        
+        
         
         try: # to write compressed data to compressed_data_file
             assert(len(compressed_data) > 0)
             array_of_data = np.array([np.array(line) for line in compressed_data]) # convert list of lists to 2D numpy array
-            compressed_data_file.create_dataset("data", data=array_of_data) # TODO get data to be of same length
+            compressed_data_file.create_dataset(dataset_name, data=array_of_data)
         except Exception as e:
             log_error("could not create dataset: in " + compressed_data_file_name)
             raise e
-    
-    
+
         for file in files_to_delete:
             try: # to delete used raw data files
                 os.remove(os.path.join(INPUT_DIR, file))
