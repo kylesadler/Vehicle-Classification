@@ -31,7 +31,7 @@ def vehicle_detected(a):
     pass
 
 
-def process_data(data):
+def find_vehicle(data, start_time):
     """
     def process_single_beam_data(data):
         "" takes in 1D numpy array data and extracts vehicles, normalizes, ect. returns processed data ""
@@ -42,7 +42,6 @@ def process_data(data):
         "" takes in 2D numpy array data and extracts vehicles, normalizes, ect. returns processed data ""
         pass
     """
-    
     
     count = 0 # consecutive measurements with a vehicle detected
     current_vehicle =[]
@@ -99,14 +98,12 @@ def process_data(data):
         
     
         # normalize vehicles
-        vehicle_image = normalize()
+        vehicle_image = normalize_vehicle()
         
         
-        vehicles.create_dataset(vehicle_ID, data=vehicle_image)
+        output_file.create_dataset(vehicle_ID, data=vehicle_image)
                               
-    vehicles.close()
-        
-                    
+            
     
     
 def process_file(file):
@@ -115,17 +112,20 @@ def process_file(file):
     keys = input_file.keys()
     keys.sort() # ensure that data is processed in order
     
-    output_file = h5py.File("vehicles.h5", 'a')
+    output_file = h5py.File(os.path.join(OUTPUT_DIR, "vehicles.h5"), 'a')
     
     for k in keys:
         
         lidar_data = np.array(hdf5_file.get(k)) # array
-        process_data(lidar_data, output_file)
-      
+
+            
+        
+        
+        
     
-                              
     output_file.close()
-      
+    os.remove(file)
+
         
 def is_hdf5_file(file):
     name = file.split(".")
@@ -135,23 +135,12 @@ def get_files_to_process():
     output = []
     
     for file in os.listdir(INPUT_DIR):
-       if(id_hdf5_file(file)):
-           output.append(file)  
-    
+       if(is_hdf5_file(file)):
+           output.append(os.path.join(INPUT_DIR, file))  
+
     return output
 
 def main():
-    """data_to_process = h5py.File('data.h5', 'r') # array
-    
-    #if(SINGLE_BEAM_LIDAR):
-        processed_data = process_single_beam_data(data_to_process)
-    else:
-        processed_data = process_scanning_data(data_to_process)
-    #
-    
-    processed_vehicles = processed_vehicles(data_to_process)
-
-    store_as_hdf5(processed_vehicles)"""
     
     files_to_process = get_files_to_process()
     
