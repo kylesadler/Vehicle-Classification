@@ -98,22 +98,48 @@ def process_data(data):
             current_vehicle.append(measurement)
         
     
+        # normalize vehicles
+        vehicle_image = normalize()
+        
+        
+        vehicles.create_dataset(vehicle_ID, data=vehicle_image)
+                              
+    vehicles.close()
         
                     
     
     
 def process_file(file):
     
-    hdf5_file = h5py.File(file, 'r')
-    keys = hdf5_file.keys()
+    input_file = h5py.File(file, 'r')
+    keys = input_file.keys()
     keys.sort() # ensure that data is processed in order
+    
+    output_file = h5py.File("vehicles.h5", 'a')
     
     for k in keys:
         
         lidar_data = np.array(hdf5_file.get(k)) # array
-        process_data(lidar_data)
-        
+        process_data(lidar_data, output_file)
+      
     
+                              
+    output_file.close()
+      
+        
+def is_hdf5_file(file):
+    name = file.split(".")
+    return name[1] == "h5"
+    
+def get_files_to_process():
+    output = []
+    
+    for file in os.listdir(INPUT_DIR):
+       if(id_hdf5_file(file)):
+           output.append(file)  
+    
+    return output
+
 def main():
     """data_to_process = h5py.File('data.h5', 'r') # array
     
@@ -129,36 +155,11 @@ def main():
     
     files_to_process = get_files_to_process()
     
-    # collection of detected vehicles, each image stored under vehicle ID
-    vehicles = h5py.File(os.path.join(OUTPUT_DIR, "vehicles_"+str(datetime.now()).replace("-","").replace(":","").replace(" ","").replace(".","")+".h5"), 'w')
-    
-    
     for file in files_to_process: # these are hdf5 files from different days. do not go together
         process_file(file)
-     
-        # normalize vehicles
-        vehicle_image = normalize()
-        
-        
-        vehicles.create_dataset(vehicle_ID, data=vehicle_image)
-                              
-    vehicles.close()
     
-def is_hdf5_file(file):
-    name = file.split(".")
-    return name[1] == "h5"
-    
-def get_files_to_process():
-    output = []
-    
-    for file in os.listdir(INPUT_DIR):
-       if(id_hdf5_file(file)):
-           output.append(file)  
-    
-    return output
-    
-    
-    
+if __name__ == "__main__":
+    main()
     
     
     
