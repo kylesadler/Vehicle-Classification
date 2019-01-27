@@ -4,14 +4,14 @@
  lidar sensor outputs uncompressed data files named raw_data_XYZ.log where XYZ is a natural number with up to three digits.
  These files are originally stored in /raw_data.
  
- this program compresses these raw data files into a small number of hdf5 files
+ this program compresses these raw data files into a small number of hdf5 files in ascending order
  
  Lidar Files
     --> raw_data
         --> raw_data_XYZ.log
     
     --> compressed_data
-        YYYY_MM_DD_HH:MM:SS_compressed_data.log
+        YYYYMMDDHHMMSS.h5
     
     --> data_compressor.py
     
@@ -53,6 +53,8 @@ def main():
         if(len(files_to_compress) == 0):
             continue
         
+        files_to_compress.sort() # ensures that data is in correct order
+        
         compressed_data_file_name = get_name(files_to_compress[0])
         compressed_data = [] # data for the entire loop of files
         files_to_delete =[]
@@ -88,7 +90,7 @@ def main():
                     
             input_file.close()
             files_to_delete.append(file)
-            
+            print("processing file " + file)
             
             
         
