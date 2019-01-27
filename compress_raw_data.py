@@ -144,7 +144,7 @@ def is_raw_data(f):
     return False
 
 def get_files_to_compress(file_list):
-    output =[]
+    output = []
     
     for file in file_list:
         if(is_raw_data(file)):

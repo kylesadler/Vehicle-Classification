@@ -4,6 +4,12 @@
         (4) stores processed vehicle data as m x n images in hfd5 file
         
     This module works for both 1D and 2D (scanning) lidar data
+    
+    
+    2D lidar
+    
+    time is vertical starting with earliest time
+    data[time][position]
 """
 
 import numpy as np
@@ -107,17 +113,35 @@ def process_data(data):
     return processed_vehicles
     
 def main():
-    data_to_process = h5py.File('data.h5', 'r') # array
+    """data_to_process = h5py.File('data.h5', 'r') # array
     
-    """if(SINGLE_BEAM_LIDAR):
+    #if(SINGLE_BEAM_LIDAR):
         processed_data = process_single_beam_data(data_to_process)
     else:
         processed_data = process_scanning_data(data_to_process)
-    """
+    #
     
     processed_vehicles = processed_vehicles(data_to_process)
 
-    store_as_hdf5(processed_vehicles)
+    store_as_hdf5(processed_vehicles)"""
+    
+    files_to_process = get_files_to_process()
+    
+    for file in files_to_process:
+        
+    
+def is_hdf5_file(file):
+    name = file.split(".")
+    return name[1] == "h5"
+    
+def get_files_to_process():
+    output = []
+    
+    for file in os.listdir(INPUT_DIR):
+       if(id_hdf5_file(file)):
+           output.append(file)  
+    
+    return output
     
     
     
