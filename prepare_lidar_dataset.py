@@ -21,7 +21,7 @@ OUTPUT_DIR = "processed_data"
 
 
 
-def normalize_vehicle():
+def normalize_vehicle(v):
     """ takes in numpy array of vehicle data, processes it, returns numpy array of vehicle data """
     pass
 
@@ -31,7 +31,7 @@ def vehicle_detected(a):
     pass
 
 
-def find_vehicle(data, start_time):
+def find_vehicle(data, input_file, keys, start_time):
     """
     def process_single_beam_data(data):
         "" takes in 1D numpy array data and extracts vehicles, normalizes, ect. returns processed data ""
@@ -42,6 +42,7 @@ def find_vehicle(data, start_time):
         "" takes in 2D numpy array data and extracts vehicles, normalizes, ect. returns processed data ""
         pass
     """
+    lidar_data = np.array(hdf5_file.get(k)) # array
     
     count = 0 # consecutive measurements with a vehicle detected
     current_vehicle =[]
@@ -97,13 +98,9 @@ def find_vehicle(data, start_time):
             current_vehicle.append(measurement)
         
     
-        # normalize vehicles
-        vehicle_image = normalize_vehicle()
-        
-        
-        output_file.create_dataset(vehicle_ID, data=vehicle_image)
-                              
-            
+def process_vehicle(v):
+    normalize_vehicle(v)
+                
     
     
 def process_file(file):
@@ -114,14 +111,19 @@ def process_file(file):
     
     output_file = h5py.File(os.path.join(OUTPUT_DIR, "vehicles.h5"), 'a')
     
-    for k in keys:
+    are_more_vehicles = True
+    
+    while(are_more_vehicles):
         
-        lidar_data = np.array(hdf5_file.get(k)) # array
+        are_more_vehicles, vehicle = find_vehicle(lidar_data, input_file, keys, start)
+        
+        
+        # normalize vehicle
+        vehicle_image = process_vehicle(vehicle)
+        
+        
+        output_file.create_dataset(vehicle_ID, data=vehicle_image)
 
-            
-        
-        
-        
     
     output_file.close()
     os.remove(file)
