@@ -42,61 +42,6 @@ def process_data(data):
         pass
     """
     
-    processed_vehicles = []
-    count = 0 # consecutive measurements with a vehicle detected
-    current_vehicle =[]
-    recording_vehicle = False
-    
-    
-    # data[time][position], measurement is a data capture at a specific time
-    for time in range(len(data)): # go through measurements identifying vehicles; if vehicle is found, process and add to list
-        
-        measurement = data[time]
-        
-        vehicle_present = vehicle_detected(measurement)
-        
-        # if there isn't a vehicle in the current frame and we are not recording a current vehicle, continue
-        if(not vehicle_present and not recording_vehicle): 
-            continue
-        
-        elif(vehicle_present and not recording_vehicle):
-            count+=1
-            
-            if(count > DETECTION_THRESHOLD):
-                
-                count = 0
-                
-                for i in range(DETECTION_THRESHOLD): # add previous points to vehicle
-                    current_vehicle.append(data[time - DETECTION_THRESHOLD + i])#
-                
-                recording_vehicle = True            
-            
-        
-        elif(not vehicle_present and recording_vehicle):
-            count+=1
-            
-            if(count > DETECTION_THRESHOLD):
-                
-                count = 0
-                
-                current_vehicle = current_vehicle[:len(current_vehicle)-DETECTION_THRESHOLD]
-                
-                # stop recording vehicle
-                
-                recording_vehicle = False    
-                
-                processed_vehicles.append(normalize_vehicle(current_vehicle))
-                current_vehicle = []
-            
-            
-            
-        if(recording_vehicle): # add data point to current vehicle
-            
-            current_vehicle.append(measurement)
-        
-    
-    
-    return processed_vehicles
     
 def main():
     """data_to_process = h5py.File('data.h5', 'r') # array
@@ -118,16 +63,72 @@ def main():
     
     
     for file in files_to_process:
-        data_to_process = np.array(h5py.File(file, 'r').get("data")) # array
+        lidar_data = np.array(h5py.File(file, 'r').get("data")) # array
+        
+     
+        count = 0 # consecutive measurements with a vehicle detected
+        current_vehicle =[]
+        recording_vehicle = False
         
         # find vehicles
+        for time in range(len(lidar_data)):
+           
+            
+            
+        # data[time][position], measurement is a data capture at a specific time
+        # go through measurements identifying vehicles; if vehicle is found, process and add to list
+            
+            measurement = data[time]
+            
+            vehicle_present = vehicle_detected(measurement)
+            
+            # if there isn't a vehicle in the current frame and we are not recording a current vehicle, continue
+            if(not vehicle_present and not recording_vehicle): 
+                continue
+            
+            elif(vehicle_present and not recording_vehicle):
+                count+=1
+                
+                if(count > DETECTION_THRESHOLD):
+                    
+                    count = 0
+                    
+                    for i in range(DETECTION_THRESHOLD): # add previous points to vehicle
+                        current_vehicle.append(data[time - DETECTION_THRESHOLD + i])#
+                    
+                    recording_vehicle = True            
+                
+            
+            elif(not vehicle_present and recording_vehicle):
+                count+=1
+                
+                if(count > DETECTION_THRESHOLD):
+                    
+                    count = 0
+                    
+                    current_vehicle = current_vehicle[:len(current_vehicle)-DETECTION_THRESHOLD]
+                    
+                    # stop recording vehicle
+                    
+                    recording_vehicle = False    
+                    
+                    processed_vehicles.append(normalize_vehicle(current_vehicle))
+                    current_vehicle = []
+                
+                
+                
+            if(recording_vehicle): # add data point to current vehicle
+                
+                current_vehicle.append(measurement)
+            
         
+        
+                    
         # normalize vehicles
+        vehicle_image = normalize()
         
         
-        
-        compressed_data_file.create_dataset("data", data=array_of_data) # TODO get data to be of same length
-
+        vehicles.create_dataset(vehicle_ID, data=vehicle_image)
                               
     vehicles.close()
     
