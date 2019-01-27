@@ -14,6 +14,7 @@
 
 import numpy as np
 import h5py
+from datetime import datetime
 
 INPUT_DIR = "compressed_data"
 OUTPUT_DIR = "processed_data"
@@ -43,68 +44,75 @@ def process_data(data):
     """
     
     
-        count = 0 # consecutive measurements with a vehicle detected
-        current_vehicle =[]
-        recording_vehicle = False
+    count = 0 # consecutive measurements with a vehicle detected
+    current_vehicle =[]
+    recording_vehicle = False
+    
+    # find vehicles
+    for time in range(len(lidar_data)):
+       
+        # data[time][position], measurement is a data capture at a specific time
+        # go through measurements identifying vehicles; if vehicle is found, process and add to list
         
-        # find vehicles
-        for time in range(len(lidar_data)):
-           
-            # data[time][position], measurement is a data capture at a specific time
-            # go through measurements identifying vehicles; if vehicle is found, process and add to list
+        measurement = lidar_data[time]
+        
+        vehicle_present = vehicle_detected(measurement)
+        
+        # if there isn't a vehicle in the current frame and we are not recording a current vehicle, continue
+        if(not vehicle_present and not recording_vehicle): 
+            continue
+        
+        elif(vehicle_present and not recording_vehicle):
+            count+=1
             
-            measurement = lidar_data[time]
-            
-            vehicle_present = vehicle_detected(measurement)
-            
-            # if there isn't a vehicle in the current frame and we are not recording a current vehicle, continue
-            if(not vehicle_present and not recording_vehicle): 
-                continue
-            
-            elif(vehicle_present and not recording_vehicle):
-                count+=1
+            if(count > DETECTION_THRESHOLD):
                 
-                if(count > DETECTION_THRESHOLD):
-                    
-                    count = 0
-                    
-                    for i in range(DETECTION_THRESHOLD): # add previous points to vehicle
-                        current_vehicle.append(data[time - DETECTION_THRESHOLD + i])#
-                    
-                    recording_vehicle = True            
+                count = 0
                 
-            
-            elif(not vehicle_present and recording_vehicle):
-                count+=1
+                for i in range(DETECTION_THRESHOLD): # add previous points to vehicle
+                    current_vehicle.append(data[time - DETECTION_THRESHOLD + i])#
                 
-                if(count > DETECTION_THRESHOLD):
-                    
-                    count = 0
-                    
-                    current_vehicle = current_vehicle[:len(current_vehicle)-DETECTION_THRESHOLD]
-                    
-                    # stop recording vehicle
-                    
-                    recording_vehicle = False    
-                    
-                    processed_vehicles.append(normalize_vehicle(current_vehicle))
-                    current_vehicle = []
-                
-                
-                
-            if(recording_vehicle): # add data point to current vehicle
-                
-                current_vehicle.append(measurement)
+                recording_vehicle = True            
             
         
+        elif(not vehicle_present and recording_vehicle):
+            count+=1
+            
+            if(count > DETECTION_THRESHOLD):
+                
+                count = 0
+                
+                current_vehicle = current_vehicle[:len(current_vehicle)-DETECTION_THRESHOLD]
+                
+                # stop recording vehicle
+                
+                recording_vehicle = False    
+                
+                processed_vehicles.append(normalize_vehicle(current_vehicle))
+                current_vehicle = []
+            
+            
+            
+        if(recording_vehicle): # add data point to current vehicle
+            
+            current_vehicle.append(measurement)
+        
+    
         
                     
     
     
 def process_file(file):
-    lidar_data = np.array(h5py.File(file, 'r').get("data")) # array
-    process_data(lidar_data)
     
+    hdf5_file = h5py.File(file, 'r')
+    keys = hdf5_file.keys()
+    keys.sort() # ensure that data is processed in order
+    
+    for k in keys:
+        
+        lidar_data = np.array(hdf5_file.get(k)) # array
+        process_data(lidar_data)
+        
     
 def main():
     """data_to_process = h5py.File('data.h5', 'r') # array
@@ -120,14 +128,13 @@ def main():
     store_as_hdf5(processed_vehicles)"""
     
     files_to_process = get_files_to_process()
-    files_to_process.sort() # ensure that data is processed in order
     
     # collection of detected vehicles, each image stored under vehicle ID
-    vehicles = h5py.File(os.path.join(OUTPUT_DIR, "vehicles.h5"), 'w')
+    vehicles = h5py.File(os.path.join(OUTPUT_DIR, "vehicles_"+str(datetime.now()).replace("-","").replace(":","").replace(" ","").replace(".","")+".h5"), 'w')
     
     
     for file in files_to_process: # these are hdf5 files from different days. do not go together
-        process_file(file):
+        process_file(file)
      
         # normalize vehicles
         vehicle_image = normalize()
