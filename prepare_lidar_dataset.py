@@ -20,22 +20,8 @@ OUTPUT_DIR = "processed_data"
 
 
 
-def read_in_data():
-    """ reads in data from file, returns a numpy array of data """
-    """
-        for 2D array temporal axis is vertical, spatial axis (vertical in real life) is horizontal
-        array[time][location]
-    """
-    pass
-
-
 def normalize_vehicle():
     """ takes in numpy array of vehicle data, processes it, returns numpy array of vehicle data """
-    pass
-
-
-def store_as_hdf5(data):
-    """ stores the numpy array as hdf5 file """
     pass
 
 
@@ -127,9 +113,23 @@ def main():
     
     files_to_process = get_files_to_process()
     
+    # collection of detected vehicles, each image stored under vehicle ID
+    vehicles = h5py.File(os.path.join(OUTPUT_DIR, "vehicles.h5"), 'w')
+    
+    
     for file in files_to_process:
         data_to_process = np.array(h5py.File(file, 'r').get("data")) # array
         
+        # find vehicles
+        
+        # normalize vehicles
+        
+        
+        
+        compressed_data_file.create_dataset("data", data=array_of_data) # TODO get data to be of same length
+
+                              
+    vehicles.close()
     
 def is_hdf5_file(file):
     name = file.split(".")
