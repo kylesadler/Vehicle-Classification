@@ -10,6 +10,8 @@
     
     time is vertical starting with earliest time
     data[time][position]
+    
+    ONlY WORKS AFTER ALL DATA HAS BEEN WRITTEN INTO /compressed_data
 """
 
 import numpy as np
@@ -33,14 +35,7 @@ def vehicle_detected(a):
 
 def find_vehicle(data, input_file, keys, start_time):
     """
-    def process_single_beam_data(data):
-        "" takes in 1D numpy array data and extracts vehicles, normalizes, ect. returns processed data ""
-        pass
-
-    
-    def process_scanning_data(data):
-        "" takes in 2D numpy array data and extracts vehicles, normalizes, ect. returns processed data ""
-        pass
+    return are_more_vehicles, vehicle (numpy array), vehicle_ID (unique)
     """
     lidar_data = np.array(hdf5_file.get(k)) # array
     
@@ -119,7 +114,7 @@ def main():
     
     files_to_process = get_files_to_process()
     
-    input_file = h5py.File(file, 'r')
+    input_file = h5py.File("compressed_data.h5", 'r')
     keys = input_file.keys()
     keys.sort() # ensure that data is processed in order
     
@@ -129,18 +124,19 @@ def main():
     
     while(are_more_vehicles):
         
-        are_more_vehicles, vehicle = find_vehicle(lidar_data, input_file, keys, start)
-        
+        are_more_vehicles, vehicle, vehicle_ID = find_vehicle(lidar_data, input_file, keys, start)
         
         # normalize vehicle
         vehicle_image = process_vehicle(vehicle)
         
-        
-        output_file.create_dataset(vehicle_ID, data=vehicle_image)
+        try:
+            output_file.create_dataset(vehicle_ID, data=vehicle_image)
+        except:
+            print("dataset " + str(vehicle_ID)+" has already been created.")
 
     
     output_file.close()
-    os.remove(file)
+    #os.remove(file) see if there is a way to remove used dataset
 
         
 if __name__ == "__main__":
