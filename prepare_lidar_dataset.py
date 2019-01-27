@@ -1,14 +1,18 @@
-import numpy as np
-import h5py
-
 """ This module:
-        (1) takes in compressed raw lidar data
-        (2) identifies vehicles in the compressed data
-        (3) processes and normalizes data for each vehicle
+        (1) takes in compressed raw lidar in hdf5 files
+        (2) identifies vehicles and normalizes data
         (4) stores processed vehicle data as m x n images in hfd5 file
         
     This module works for both 1D and 2D (scanning) lidar data
 """
+
+import numpy as np
+import h5py
+
+INPUT_DIR = "compressed_data"
+OUTPUT_DIR = "processed_data"
+
+
 
 def read_in_data():
     """ reads in data from file, returns a numpy array of data """
@@ -103,7 +107,7 @@ def process_data(data):
     return processed_vehicles
     
 def main():
-    data_to_process = read_in_data() # array
+    data_to_process = h5py.File('data.h5', 'r') # array
     
     """if(SINGLE_BEAM_LIDAR):
         processed_data = process_single_beam_data(data_to_process)

@@ -4,17 +4,7 @@
  lidar sensor outputs uncompressed data files named raw_data_XYZ.log where XYZ is a natural number with up to three digits.
  These files are originally stored in /raw_data.
  
- For each raw_data_XYZ.log file, this program:
- (1) creates a new file "YYYY_MM_DD_HH_MM_SS_compressed_data.log" where YYYY_MM_DD_HH_MM_SS is the date and time
- the data was taken.
- (2) compresses the data from raw_data_XYZ.log into new file
- (3) stores new file in directory /compressed_data
- (4) deletes the original raw_data_XYZ.log file
- 
- This program also logs all errors in data_compressor_error_log.log and to screen
- 
- input_file is of format "raw_data_XYZ.log" where XYZ is a natural number
- output_file is of format "YYYY_MM_DD_HH_MM_SS_compressed_data.log"
+ this program compresses these raw data files into a small number of hdf5 files
  
  Lidar Files
     --> raw_data
@@ -39,7 +29,7 @@ import h5py
 INPUT_DIR = "raw_data"
 OUTPUT_DIR = "compressed_data"
 LOG_FILE_NAME = "data_compressor_error_log.log"
-MIN_TO_SLEEP = .01;  # time to let files complete writing before processing, 3x lidar output interval suggested
+MIN_TO_SLEEP = 10;  # time to let files complete writing before processing, 3x lidar output interval suggested
 BASE_OF_DATA_POINTS = 16 # should be in hexadecimal
 ERRORS_ONLY = False
 
