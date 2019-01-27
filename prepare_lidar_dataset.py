@@ -102,8 +102,22 @@ def process_vehicle(v):
     normalize_vehicle(v)
                 
     
+def is_hdf5_file(file):
+    name = file.split(".")
+    return name[1] == "h5"
     
-def process_file(file):
+def get_files_to_process():
+    output = []
+    
+    for file in os.listdir(INPUT_DIR):
+       if(is_hdf5_file(file)):
+           output.append(os.path.join(INPUT_DIR, file))  
+
+    return output
+
+def main():
+    
+    files_to_process = get_files_to_process()
     
     input_file = h5py.File(file, 'r')
     keys = input_file.keys()
@@ -129,26 +143,6 @@ def process_file(file):
     os.remove(file)
 
         
-def is_hdf5_file(file):
-    name = file.split(".")
-    return name[1] == "h5"
-    
-def get_files_to_process():
-    output = []
-    
-    for file in os.listdir(INPUT_DIR):
-       if(is_hdf5_file(file)):
-           output.append(os.path.join(INPUT_DIR, file))  
-
-    return output
-
-def main():
-    
-    files_to_process = get_files_to_process()
-    
-    for file in files_to_process: # these are hdf5 files from different days. do not go together
-        process_file(file)
-    
 if __name__ == "__main__":
     main()
     
