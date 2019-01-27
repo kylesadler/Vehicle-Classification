@@ -43,30 +43,6 @@ def process_data(data):
     """
     
     
-def main():
-    """data_to_process = h5py.File('data.h5', 'r') # array
-    
-    #if(SINGLE_BEAM_LIDAR):
-        processed_data = process_single_beam_data(data_to_process)
-    else:
-        processed_data = process_scanning_data(data_to_process)
-    #
-    
-    processed_vehicles = processed_vehicles(data_to_process)
-
-    store_as_hdf5(processed_vehicles)"""
-    
-    files_to_process = get_files_to_process()
-    files_to_process.sort() # ensure that data is processed in order
-    
-    # collection of detected vehicles, each image stored under vehicle ID
-    vehicles = h5py.File(os.path.join(OUTPUT_DIR, "vehicles.h5"), 'w')
-    
-    
-    for file in files_to_process:
-        lidar_data = np.array(h5py.File(file, 'r').get("data")) # array
-        
-     
         count = 0 # consecutive measurements with a vehicle detected
         current_vehicle =[]
         recording_vehicle = False
@@ -123,6 +99,36 @@ def main():
         
         
                     
+    
+    
+def process_file(file):
+    lidar_data = np.array(h5py.File(file, 'r').get("data")) # array
+    process_data(lidar_data)
+    
+    
+def main():
+    """data_to_process = h5py.File('data.h5', 'r') # array
+    
+    #if(SINGLE_BEAM_LIDAR):
+        processed_data = process_single_beam_data(data_to_process)
+    else:
+        processed_data = process_scanning_data(data_to_process)
+    #
+    
+    processed_vehicles = processed_vehicles(data_to_process)
+
+    store_as_hdf5(processed_vehicles)"""
+    
+    files_to_process = get_files_to_process()
+    files_to_process.sort() # ensure that data is processed in order
+    
+    # collection of detected vehicles, each image stored under vehicle ID
+    vehicles = h5py.File(os.path.join(OUTPUT_DIR, "vehicles.h5"), 'w')
+    
+    
+    for file in files_to_process: # these are hdf5 files from different days. do not go together
+        process_file(file):
+     
         # normalize vehicles
         vehicle_image = normalize()
         
