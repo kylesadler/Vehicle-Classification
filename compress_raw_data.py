@@ -74,6 +74,8 @@ def main():
             raise Exception("well shit")
         
         
+        
+        
         for file in files_to_compress: # loop through all files to compress
             
             try: # to open data_file
@@ -95,8 +97,11 @@ def main():
                 line = input_file.readline()
                     
             input_file.close()
+            files_to_delete.append(file)
             
             
+            
+        
         try: # to write compressed data to compressed_data_file
             assert(len(compressed_data) > 0)
             array_of_data = np.array([np.array(line) for line in compressed_data]) # convert list of lists to 2D numpy array
@@ -108,7 +113,7 @@ def main():
     
         for file in files_to_delete:
             try: # to delete used raw data files
-                os.remove(file)
+                os.remove(os.path.join(INPUT_DIR, file))
             except Exception as e:
                 #print(repr(e))
                 log_warning("could not delete raw data file: " + file)
