@@ -57,6 +57,7 @@ def main():
     store_as_hdf5(processed_vehicles)"""
     
     files_to_process = get_files_to_process()
+    files_to_process.sort() # ensure that data is processed in order
     
     # collection of detected vehicles, each image stored under vehicle ID
     vehicles = h5py.File(os.path.join(OUTPUT_DIR, "vehicles.h5"), 'w')
@@ -73,12 +74,10 @@ def main():
         # find vehicles
         for time in range(len(lidar_data)):
            
+            # data[time][position], measurement is a data capture at a specific time
+            # go through measurements identifying vehicles; if vehicle is found, process and add to list
             
-            
-        # data[time][position], measurement is a data capture at a specific time
-        # go through measurements identifying vehicles; if vehicle is found, process and add to list
-            
-            measurement = data[time]
+            measurement = lidar_data[time]
             
             vehicle_present = vehicle_detected(measurement)
             
