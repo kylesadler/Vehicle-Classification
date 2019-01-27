@@ -78,7 +78,7 @@ def main():
         
         for file in files_to_compress: # loop through all files to compress
             
-            try: # to open data_file
+            try: # to open file
                 input_file = open(os.path.join(INPUT_DIR, file), "r")
             except:
                 log_error("could not open input file: " + input_file.name)
@@ -107,9 +107,9 @@ def main():
             array_of_data = np.array([np.array(line) for line in compressed_data]) # convert list of lists to 2D numpy array
             compressed_data_file.create_dataset("data", data=array_of_data) # TODO get data to be of same length
         except Exception as e:
-            log_error("could not compress file: " + input_file_name)
-            log_error("could not create dataset: " + dataset_name + " in " + compressed_data_file_name)
-            continue
+            log_error("could not create dataset: in " + compressed_data_file_name)
+            raise e
+    
     
         for file in files_to_delete:
             try: # to delete used raw data files
