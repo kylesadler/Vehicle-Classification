@@ -16,18 +16,16 @@
  input_file is of format "raw_data_XYZ.log" where XYZ is a natural number
  output_file is of format "YYYY_MM_DD_HH_MM_SS_compressed_data.log"
  
- File setup:
- 
- workspace
-    |-> raw_data
-    |   |-> raw_data_XYZ.log files
-    |    
-    |-> data_compressor.py
-    |
-    |-> compressed_data (created by this program)
-    |   |-> YYYY_MM_DD_HH:MM:SS_compressed_data.log
-    |
-    |-> data_compressor_error_log.log (created by this program)
+ Lidar Files
+    --> raw_data
+        --> raw_data_XYZ.log
+    
+    --> compressed_data
+        YYYY_MM_DD_HH:MM:SS_compressed_data.log
+    
+    --> data_compressor.py
+    
+    --> data_compressor_error_log.log
         
 
 """
@@ -35,100 +33,102 @@
 import os
 from time import sleep
 from datetime import datetime
+import numpy as np
+import h5py
 
-input_directory = "raw_data"
-output_directory = "compressed_data"
-log_file_name = "data_compressor_error_log.log"
-TIME_INTERVAL_MIN = 10;  # time in minutes to let files complete writing before processing, 2x lidar output interval suggested
+INPUT_DIR = "raw_data"
+OUTPUT_DIR = "compressed_data"
+LOG_FILE_NAME = "data_compressor_error_log.log"
+MIN_TO_SLEEP = .01;  # time to let files complete writing before processing, 3x lidar output interval suggested
+BASE_OF_DATA_POINTS = 16 # should be in hexadecimal
+ERRORS_ONLY = False
 
-
-
-log_file = open(log_file_name, "a+")  # opens the log file (or creates it if it does not exist)
-incorrectly_formatted_files = [] # so repeated warnings don't flood error log
-if not os.path.exists(output_directory): # make output_directory if it doesn't exist
-    os.makedirs(output_directory)
+log_file = open(LOG_FILE_NAME, "a+")  # opens the log file (or creates it if it does not exist)
+incorrectly_formatted_files = [] # so warnings don't flood error log
+if not os.path.exists(OUTPUT_DIR): # make OUTPUT_DIR if it doesn't exist
+    os.makedirs(OUTPUT_DIR)
 
 
 def main():
-    # files that have been in /raw_data directory for over TIME_INTERVAL_MIN minutes
-    files_to_compress = []  # use dictionary if tons and tons of files
     
     while(True):
-        
-        # loop through all files that have been in /raw_data directory for over TIME_INTERVAL_MIN minutes
-        for data_file in files_to_compress: 
-            
-            # if a "raw_data_XYZ.log" file
-            if(is_raw_data(data_file)): 
-                
-                # try to compress input file
-                try:
-                    
-                    # try to open the input file
-                    input_file_name = os.path.join(input_directory, data_file)
-                    try:
-                        input_file = open(input_file_name, "r")
-                    except:
-                        log_error("could not open input file: " + input_file_name)
-                        continue  # skip loop iteration so file is not deleted
-                    
-                    # get first timestamp of data
-                    line = input_file.readline()
-                    date = line[0:10].replace("-", "_")
-                    time = line[11:19].replace(":", "_") # windows does not allow ":" in filenames
-                    
-                    # try to create the output file
-                    output_file_name = os.path.join(output_directory, date + "_" + time + "_compressed_data.log")
-                    try:
-                        output_file = open(output_file_name, "w+") 
-                    except:
-                        log_error("could not create output file: " + output_file_name + "\n" + "from input file: " + input_file_name)
-                        continue  # skip loop iteration so file is not deleted
-                
-                    # loop through input file, compress each line, and write to output file
-                    while(line != ""):
-                        
-                        # try to compress line
-                        try:
-                            compressed_line = compress_line(line)
-                        except:
-                            log_error("could not parse line: " + line  + "in file: " + input_file_name)
-                            raise 
-                        
-                        if(compressed_line == ""):
-                            line = input_file.readline()
-                            continue
-                        
-                        # try to write compressed line to output_file   
-                        try:
-                            output_file.write(compressed_line + "\n")
-                        except:
-                            log_error("could not write compressed line to file: " + output_file_name)
-                            raise
-                        
-                        line = input_file.readline()
-                        
-                # else log error to log_file and skip data_file
-                except:
-                    log_error("could not compress file: " + input_file_name)
-                    continue  # skip loop iteration so file is not deleted
-                    
-                # try to delete data_file to free space
-                try:
-                    input_file.close()
-                    os.remove(input_file_name)
-                except Exception as e:
-                    print(repr(e))
-                    log_warning("could not delete file: " + input_file_name)
-                                  
         # get all files in directory
-        files_to_compress = os.listdir(input_directory) 
+        files_in_dir = os.listdir(INPUT_DIR) 
         
-        # sleeps for TIME_INTERVAL_MIN
-        sleep(60 * TIME_INTERVAL_MIN);
-
+        # sleeps for MIN_TO_SLEEP, let files_in_dir finish writing
+        sleep(60 * MIN_TO_SLEEP);
+        
+        files_to_compress = get_files_to_compress(files_in_dir)
+        
+        if(len(files_to_compress) == 0):
+            continue
+        
+        compressed_data_file_name = get_name(files_to_compress[0])
+        compressed_data = []
             
-def is_raw_data(f):  # returns true if file name is of correct format, returns false otherwise
+        try: # to initialize compressed_data_file
+            compressed_data_file = h5py.File(os.path.join(OUTPUT_DIR, compressed_data_file_name + ".h5"), 'w')
+        except:
+            log_error("could not create compressed data file: " + compressed_data_file_name)
+            raise Exception("well shit")
+        
+        
+        for data_file in files_to_compress: # loop through all files to compress
+            
+            try: # to open data_file
+                input_file_name = os.path.join(INPUT_DIR, data_file)
+                input_file = open(input_file_name, "r")
+            except:
+                log_error("could not open input file: " + input_file_name)
+                continue  # skip loop iteration so file is not deleted
+            
+            # dataset_name is a giant number YYYYMMDDHHSS
+            line = input_file.readline()
+            date = line[0:10].replace("-", "")
+            time = line[11:23].replace(":", "").replace(".", "")
+            dataset_name = date + time
+            print(str(dataset_name))
+                
+            # loop through input file, compress each line, and write to output file
+            while(line != ""):
+                try: # to compress line
+                    compressed_line = parse_line(line)
+                    compressed_data.append(compressed_line)
+                except Exception as e:
+                    log_warning("could not parse line in file: " + input_file_name + ": " + line)
+                
+                line = input_file.readline()
+                    
+            
+            try: # to write compressed data to compressed_data_file
+                assert(len(compressed_data) > 0)
+                array_of_data = np.array([np.array(line) for line in compressed_data]) # convert list of lists to 2D numpy array
+                compressed_data_file.create_dataset(dataset_name, data=array_of_data) # TODO get data to be of same length
+            except Exception as e:
+                log_error("could not compress file: " + input_file_name)
+                log_error("could not create dataset: " + dataset_name + " in " + compressed_data_file_name)
+                continue
+        
+        
+            try: # to delete used raw data file
+                input_file.close()
+                os.remove(input_file.name)
+            except Exception as e:
+                #print(repr(e))
+                log_warning("could not delete raw data file: " + input_file.name)
+                              
+                              
+        compressed_data_file.close() # writes compressed_data_file to the disk
+        
+        
+def get_name(file):
+    f = open(os.path.join(INPUT_DIR, file), "r")
+    
+    return f.readline()[:23].replace(":","").replace(".","").replace("-","").replace(" ","")
+    
+          
+def is_raw_data(f):
+    """ returns true if file name is of correct format, returns false otherwise """
     
     name = os.path.basename(f)
     split_name = name.split(".")  # {filename, extension}
@@ -142,51 +142,63 @@ def is_raw_data(f):  # returns true if file name is of correct format, returns f
                 file_num = int(split_name[0][9:])
                 return True
             except:
-                if(f not in incorrectly_formatted_files):
-                    log_warning("raw_data file name may be incorrectly formatted: " + name)
-                    incorrectly_formatted_files.append(f)
-                return False
+                pass
 
+    if(f not in incorrectly_formatted_files):
+        incorrectly_formatted_files.append(f)
+        log_warning("raw_data file name may be incorrectly formatted: " + name)
+        
     return False
 
-        
-def compress_line(l):  # returns a compressed line from raw_data file. If line cannot be compressed, throws exception
+def get_files_to_compress(file_list):
+    output =[]
     
-    # find index of the first '<'
-    index = 23
-    while(index < len(l)):
-        if(l[index] != '<'):
-            index += 1
-        else:
-            break
+    for file in file_list:
+        if(is_raw_data(file)):
+            output.append(file)
     
-    if(index == len(l)): # if no '<' in line
-        return ""
-    else:
-        # set output equal to the timestamp of line
-        output = l[:23]
-        
-        # get data points as strings
-        data_points = l[index+1:-2].split("><")
-        
-        for data in data_points:
-            output += " " + data
-        
-        return output
+    return output
 
-def log_error(error_string):  # write string s to log file and screen
-    error = "[ERROR] " + str(datetime.now()) + " " + error_string + "\n"
-    log_file.write(error)
+def parse_line(l):
+    """ returns a list of data from line l in a raw_data file. If line cannot be compressed, raises exception """
+    
+    # transmission type is sSN LMDscandata CoLa A Hex
+    # telegram is hex --> convert to ascii --> convert to hex
+    
+    
+    index = l.index("<") # get first < in line
+    line = l[index:].replace('<',"").replace(">","")
+    
+    
+    # convert line from hex to ascii
+    ascii_line = bytes.fromhex(line).decode('ASCII')
+    #print(ascii_line)
+    
+    # get transmission parts
+    transmission_parts = ascii_line.split(" ")
+    
+    assert (len(transmission_parts) == 413), "line has incorrect data: " + l
+    
+    num_data_points = int(transmission_parts[25], BASE_OF_DATA_POINTS)
+    assert(len(transmission_parts)- 26 - 6 == num_data_points)
+    
+    # converts data_point in string with specified base to decimal int
+    return [int(point, BASE_OF_DATA_POINTS) for point in transmission_parts[26:-6]]
+
+def log_error(error_string):
+    """ write string s to log file and screen """
+    error = "[ERROR] " + str(datetime.now()) + " " + error_string
+    log_file.write(error + "\n")
     log_file.flush() # remove this for increased performance
-    print(error,)
+    print(error)
 
-def log_warning(warning_string):  # write string s to log file and screen
-    warning = "[WARNING] " + str(datetime.now()) + " " + warning_string + "\n"
-    log_file.write(warning)
+def log_warning(warning_string):
+    """ write string s to log file and screen """
+    warning = "[WARNING] " + str(datetime.now()) + " " + warning_string
+    log_file.write(warning + "\n")
     log_file.flush() # remove this for increased performance
-    print(warning,)
-
+    if(not ERRORS_ONLY):
+        print(warning)
 
 if(__name__ == "__main__"):  # just a workaround to call functions before they are defined
     main()
-    

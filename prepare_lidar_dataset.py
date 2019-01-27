@@ -47,42 +47,57 @@ def process_data(data):
     """
     
     processed_vehicles = []
-    count = 0 # consecutive measurements with a vehicle detected, ranges from 0-10
+    count = 0 # consecutive measurements with a vehicle detected
     current_vehicle =[]
+    recording_vehicle = False
     
     
     # data[time][position], measurement is a data capture at a specific time
-    for measurement in data: # go through measurements identifying vehicles; if vehicle is found, process and add to list
+    for time in range(len(data)): # go through measurements identifying vehicles; if vehicle is found, process and add to list
         
+        measurement = data[time]
         
+        vehicle_present = vehicle_detected(measurement)
         
-        if(vehicle_detected(measurement)):
+        # if there isn't a vehicle in the current frame and we are not recording a current vehicle, continue
+        if(not vehicle_present and not recording_vehicle): 
+            continue
+        
+        elif(vehicle_present and not recording_vehicle):
             count+=1
             
-        elif(count > 0):
-            count-=1
+            if(count > DETECTION_THRESHOLD):
+                
+                count = 0
+                
+                for i in range(DETECTION_THRESHOLD): # add previous points to vehicle
+                    current_vehicle.append(data[time - DETECTION_THRESHOLD + i])#
+                
+                recording_vehicle = True            
             
-        else:
-            count = 0
+        
+        elif(not vehicle_present and recording_vehicle):
+            count+=1
             
-        if(count > DETECTION_THRESHOLD):
+            if(count > DETECTION_THRESHOLD):
+                
+                count = 0
+                
+                current_vehicle = current_vehicle[:len(current_vehicle)-DETECTION_THRESHOLD]
+                
+                # stop recording vehicle
+                
+                recording_vehicle = False    
+                
+                processed_vehicles.append(normalize_vehicle(current_vehicle))
+                current_vehicle = []
             
-            for i in range(DETECTION_THRESHOLD): # add previous points to vehicle
-                current_vehicle.append(previous )
-            
-            
-            recording_vehicle = True            
             
             
         if(recording_vehicle): # add data point to current vehicle
             
             current_vehicle.append(measurement)
-            
         
-        elif(len(current_vehicle) != 0): # stop recording vehicle
-            
-            processed_vehicles.append(normalize_vehicle(current_vehicle))
-            current_vehicle = []
     
     
     return processed_vehicles
