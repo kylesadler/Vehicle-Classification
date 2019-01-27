@@ -33,9 +33,10 @@ def vehicle_detected(a):
     pass
 
 
-def find_vehicle(data, input_file, keys, start_time):
+def find_vehicle(input_file, keys, start_time):
     """
-    return are_more_vehicles, vehicle (numpy array), vehicle_ID (unique)
+        given: input_file, keys (sorted chronologically), start_time
+        return are_more_vehicles, end_time, vehicle (numpy array), vehicle_ID (unique)
     """
     lidar_data = np.array(hdf5_file.get(k)) # array
     
@@ -95,7 +96,6 @@ def find_vehicle(data, input_file, keys, start_time):
     
 def process_vehicle(v):
     normalize_vehicle(v)
-                
     
 def is_hdf5_file(file):
     name = file.split(".")
@@ -122,9 +122,11 @@ def main():
     
     are_more_vehicles = True
     
+    start = 0
+    
     while(are_more_vehicles):
         
-        are_more_vehicles, vehicle, vehicle_ID = find_vehicle(lidar_data, input_file, keys, start)
+        are_more_vehicles, start, vehicle, vehicle_ID = find_vehicle(input_file, keys, start)
         
         # normalize vehicle
         vehicle_image = process_vehicle(vehicle)
@@ -137,7 +139,6 @@ def main():
     
     output_file.close()
     #os.remove(file) see if there is a way to remove used dataset
-
         
 if __name__ == "__main__":
     main()
