@@ -29,7 +29,7 @@ import h5py
 INPUT_DIR = "raw_data"
 OUTPUT_DIR = "compressed_data"
 LOG_FILE_NAME = "data_compressor_error_log.log"
-MIN_TO_SLEEP = 10;  # time to let files complete writing before processing, 3x lidar output interval suggested
+MIN_TO_SLEEP = 0.01;  # time to let files complete writing before processing, 3x lidar output interval suggested
 BASE_OF_DATA_POINTS = 16 # should be in hexadecimal
 ERRORS_ONLY = False
 
@@ -49,6 +49,8 @@ def main():
         sleep(60 * MIN_TO_SLEEP);
         
         files_to_compress = get_files_to_compress(files_in_dir)
+
+        assert(files_to_compress != None)
         
         if(len(files_to_compress) == 0):
             continue

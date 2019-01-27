@@ -128,6 +128,7 @@ def main():
     files_to_process = get_files_to_process()
     
     for file in files_to_process:
+        data_to_process = np.array(h5py.File(file, 'r').get("data")) # array
         
     
 def is_hdf5_file(file):
