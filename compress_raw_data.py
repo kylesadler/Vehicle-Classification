@@ -41,7 +41,7 @@ if not os.path.exists(OUTPUT_DIR): # make OUTPUT_DIR if it doesn't exist
 
 def main():
     
-    compressed_data_file_name = "compressed_data"
+    compressed_data_file_name = str(datetime.datetime.now()).replace(":","").replace(" ","").replace(".","").replace("-","")
 
     
     while(True):
