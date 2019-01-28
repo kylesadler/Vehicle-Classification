@@ -35,6 +35,19 @@ from Tools.scripts.finddiv import process
 WORKING_DIR = "data" # where all the data is stored, if in same folder as this script, WORKING_DIR = "."
 VID_FILE_EXTENSION = ".MTS"
 
+
+
+
+
+
+
+def main():
+    
+    folders_to_process = get_folders_to_process(WORKING_DIR) # get folders to process
+    
+    for folder in folders_to_process:
+        process_folder(os.path.join(WORKING_DIR, folder))
+    
 def normalize_vehicle(v):
     """ takes in numpy array of vehicle data, processes it, returns numpy array of vehicle data """
     pass
@@ -151,13 +164,6 @@ def get_file_pairs(root):
                 
     return file_pairs
 
-def main():
-    
-    folders_to_process = get_folders_to_process(WORKING_DIR) # get folders to process
-    
-    for folder in folders_to_process:
-        process_folder(os.path.join(WORKING_DIR, folder))
-    
 def get_folders_to_process(root):
     """ returns folders in current dir with format 2018-10-02 UNPROCESSED/ and no corresponding 2018-10-02 PROCESSED/ """
     
@@ -252,14 +258,18 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     
     hdf5_output_file.close()
         
-        
-def parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file):
+def parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file): # TODO
     """
+        parse vehicles and store them in hdf5_output_file
+        
         given:
             hdf5_output_file
             hdf5_input_file
             keys        (sorted chronologically)
             video_files (sorted chronologically)
+        
+        output:
+            hdf5_output_file(vehicle_ID, video_frames, processed lidar image tuples)
     """
     are_more_vehicles = True
     
