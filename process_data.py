@@ -119,7 +119,7 @@ def find_vehicle(hdf5_input_file, keys, video_files, start_time):
             current_vehicle.append(measurement)
         
     
-def process_vehicle(v):
+def process_vehicle_image(v):
     """ given a numpy array of a vehicle image, process it """
     normalize_vehicle(v)
     
@@ -290,20 +290,23 @@ def parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file): # TODO
     while(are_more_vehicles):
         
         
-        are_more_vehicles, start, vehicle_ID, vehicle, video_frames = find_vehicle(hdf5_input_file, keys, video_files, start)
+        are_more_vehicles, start, vehicle_ID, vehicle_image, video_frames = find_vehicle(hdf5_input_file, keys, video_files, start)
         
-        # normalize vehicle
-        vehicle_image = process_vehicle(vehicle)
+        
+        # process vehicle image
+        processed_vehicle_image = process_vehicle_image(vehicle_image)
         
         try:
-            hdf5_output_file.create_dataset(str(vehicle_ID), data=vehicle_image)
+            hdf5_output_file.create_dataset(str(vehicle_ID), data=processed_vehicle_image)
+            push_to_database(vehicle_ID, video_frames)
         except:
             print("dataset " + str(vehicle_ID)+" has already been created.")
             raise
 
 
-
-
+def push_to_database(v_ID, video_frames):
+    """ v_ID is int, video_frames is list """
+    pass # ask about this
 
 
 
