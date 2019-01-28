@@ -18,7 +18,7 @@
     
     output:
     | --> processed_data/
-        | --> vehicles.h5
+        | --> vehicles.h5 (vehicle_ID, video_frames, processed lidar image tuples)
     
     
 """
@@ -27,7 +27,8 @@ import numpy as np
 import h5py
 from datetime import datetime
 
-INPUT_DIR = "compressed_data"
+COMPRESSED_DATA_DIR = "compressed_data"
+VIDEO_DIR = "videos"
 OUTPUT_DIR = "processed_data"
 
 
@@ -113,9 +114,9 @@ def is_hdf5_file(file):
 def get_files_to_process():
     output = []
     
-    for file in os.listdir(INPUT_DIR):
+    for file in os.listdir(COMPRESSED_DATA_DIR):
        if(is_hdf5_file(file)):
-           output.append(os.path.join(INPUT_DIR, file))  
+           output.append(os.path.join(COMPRESSED_DATA_DIR, file))  
 
     return output
 

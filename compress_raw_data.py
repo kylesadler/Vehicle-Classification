@@ -61,7 +61,7 @@ def main():
         files_to_delete =[]
         
         if(compressed_data_file_name == None):
-            compressed_data_file_name = dataset_name
+            compressed_data_file_name = dataset_name[:-2]
         
         try: # to initialize compressed_data_file
             compressed_data_file = h5py.File(os.path.join(OUTPUT_DIR, compressed_data_file_name + ".h5"), 'a')
