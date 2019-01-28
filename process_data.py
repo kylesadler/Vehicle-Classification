@@ -45,10 +45,10 @@ def vehicle_detected(a):
     pass
 
 
-def find_vehicle(input_file, keys, start_time):
+def find_vehicle(hdf5_input_file, keys, video_files, start_time):
     """
         given: input_file, keys (sorted chronologically), start_time
-        return are_more_vehicles, end_time, vehicle (numpy array), vehicle_ID (unique)
+        return are_more_vehicles, end_time, vehicle_ID (unique), vehicle_image (numpy array), video_frames
     """
     lidar_data = np.array(hdf5_file.get(k)) # array
     
@@ -107,6 +107,7 @@ def find_vehicle(input_file, keys, start_time):
         
     
 def process_vehicle(v):
+    """ given a numpy array of a vehicle image, process it """
     normalize_vehicle(v)
     
 def is_hdf5_file(file):
@@ -210,7 +211,6 @@ def process_folder(folder):
         
         process_files(hdf5_file, video_folder, WORKING_DIR)
         
-        
 def process_files(hdf5_file_path, video_folder_path, output_dir):
     """ given paths to corresponding hdf5 file and video folder
         hdf5_file_path = WORKING_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMM.h5
@@ -232,6 +232,9 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     head, hdf5_file_name = os.path.split(hdf5_file_path)
     output_dir_path = os.path.join(output_dir, hdf5_file_name[:10] + " PROCESSED")
     
+    if not os.path.exists(output_dir_path): # make output_dir_path if it doesn't exist
+        os.makedirs(output_dir_path)
+    
     hdf5_output_file = h5py.File(os.path.join(output_dir_path, hdf5_file_name[:-3]+"_vehicles.h5"), 'a')
     hdf5_input_file = h5py.File(hdf5_file_path, 'r')
     keys = hdf5_input_file.keys()
@@ -240,31 +243,41 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     
     """
         variables:
-        hdf5_output_file
-        hdf5_input_file
-        keys (sorted)
-        video_files (sorted)
+            hdf5_output_file
+            hdf5_input_file
+            keys        (sorted chronologically)
+            video_files (sorted chronologically)
     """
+    parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file)
     
+    hdf5_output_file.close()
+        
+        
+def parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file):
+    """
+        given:
+            hdf5_output_file
+            hdf5_input_file
+            keys        (sorted chronologically)
+            video_files (sorted chronologically)
+    """
     are_more_vehicles = True
     
     start = 0
     
     while(are_more_vehicles):
-        are_more_vehicles, start, vehicle, vehicle_ID = find_vehicle(input_file, keys, start)
+        are_more_vehicles, start, vehicle_ID, vehicle, video_frames = find_vehicle(hdf5_input_file, keys, video_files, start)
         
         # normalize vehicle
         vehicle_image = process_vehicle(vehicle)
         
         try:
-            output_file.create_dataset(vehicle_ID, data=vehicle_image)
+            hdf5_output_file.create_dataset(str(vehicle_ID), data=vehicle_image)
         except:
             print("dataset " + str(vehicle_ID)+" has already been created.")
+            raise
 
-    
-    output_file.close()
-    #os.remove(file) see if there is a way to remove used dataset
-        
+
 if __name__ == "__main__":
     main()
     
