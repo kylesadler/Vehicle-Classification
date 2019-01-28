@@ -11,16 +11,16 @@
     time is vertical starting with earliest time
     data[time][position]
     
-
-    | --> 2018_10_02_UNPROCESSED/
-         | --> 2018_10_02_1437.h5
-         | --> 2018_10_02_1437/ (corresponding movie for each capture)
-             | --> 0000.mov
-             | --> 0001.mov
-             | --> 0002.mov
+    | --> data/
+        | --> 2018_10_02 UNPROCESSED/
+             | --> 2018_10_02_1437.h5
+             | --> 2018_10_02_1437_video/ (corresponding movie for each capture)
+                 | --> 0000.mov
+                 | --> 0001.mov
+                 | --> 0002.mov
         
     output:
-    | --> 2018_10_02_processed/
+    | --> 2018_10_02 PROCESSED/
         | --> 2018_10_02_1437_vehicles.h5 (vehicle_ID, video_frames, processed lidar image tuples)
     
     
@@ -30,8 +30,7 @@ import numpy as np
 import h5py
 from datetime import datetime
 
-COMPRESSED_DATA_DIR = "compressed_data"
-VIDEO_DIR = "videos"
+INPUT_DIR = "data" # where all the data is stored
 OUTPUT_DIR = "processed_data"
 
 
