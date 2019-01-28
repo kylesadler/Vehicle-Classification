@@ -166,6 +166,7 @@ def parse_line(l):
     # transmission type is sSN LMDscandata CoLa A Hex
     # telegram is hex --> convert to ascii --> convert to hex
     
+    timestamp = str(l[:19].replace(":","").replace(".","").replace("-","").replace(" ",""))
     
     index = l.index("<") # get first < in line
     line = l[index:].replace('<',"").replace(">","")
@@ -183,8 +184,8 @@ def parse_line(l):
     num_data_points = int(transmission_parts[25], BASE_OF_DATA_POINTS)
     assert(len(transmission_parts)- 26 - 6 == num_data_points)
     
-    # converts data_point in string with specified base to decimal int
-    return [int(point, BASE_OF_DATA_POINTS) for point in transmission_parts[26:-6]]
+    # converts data_point in string with specified base to decimal int and add timestamp at end
+    return [int(point, BASE_OF_DATA_POINTS) for point in transmission_parts[26:-6]].append(timestamp)
 
 def log_error(error_string):
     """ write string s to log file and screen """

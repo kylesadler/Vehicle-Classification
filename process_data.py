@@ -271,11 +271,25 @@ def parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file): # TODO
         output:
             hdf5_output_file(vehicle_ID, video_frames, processed lidar image tuples)
     """
+    
+    # while(parser.has_data())
+        # new objects? - video parser and data parser
+        # go through data and videos together (scrolling FIFO -- collections.deque)
+        # 
+        # if vehicle is detected:
+            # capture vehicle image and associated video frames
+            # save image and video frames to hdf5_output_file
+        # make sure that video matches lidar signal
+    
+    
+    
     are_more_vehicles = True
     
     start = 0
     
     while(are_more_vehicles):
+        
+        
         are_more_vehicles, start, vehicle_ID, vehicle, video_frames = find_vehicle(hdf5_input_file, keys, video_files, start)
         
         # normalize vehicle
@@ -286,6 +300,11 @@ def parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file): # TODO
         except:
             print("dataset " + str(vehicle_ID)+" has already been created.")
             raise
+
+
+
+
+
 
 
 if __name__ == "__main__":
