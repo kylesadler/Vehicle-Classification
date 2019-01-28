@@ -12,16 +12,16 @@
     data[time][position]
     
     | --> data/
-        | --> 2018_10_02 UNPROCESSED/
-             | --> 2018_10_02_1437.h5
-             | --> 2018_10_02_1437_video/ (corresponding movie for each capture)
+        | --> 2018-10-02 UNPROCESSED/
+             | --> 2018-10-02-1437.h5
+             | --> 2018-10-02-1437_video/ (corresponding movie for each capture)
                  | --> 0000.mov
                  | --> 0001.mov
                  | --> 0002.mov
         
     output:
-    | --> 2018_10_02 PROCESSED/
-        | --> 2018_10_02_1437_vehicles.h5 (vehicle_ID, video_frames, processed lidar image tuples)
+    | --> 2018-10-02 PROCESSED/
+        | --> 2018-10-02-1437_vehicles.h5 (vehicle_ID, video_frames, processed lidar image tuples)
     
     
 """
@@ -30,8 +30,9 @@ import numpy as np
 import h5py
 from datetime import datetime
 import os
+from Tools.scripts.finddiv import process
 
-INPUT_DIR = "data" # where all the data is stored
+INPUT_DIR = "data" # where all the data is stored, if in same folder as this script, INPUT_DIR = "."
 
 
 def normalize_vehicle(v):
@@ -112,34 +113,71 @@ def is_hdf5_file(file):
     name = file.split(".")
     return name[1] == "h5"
     
-def get_files_to_process():
-    output = []
+def get_files(root):
+    hdf5_files = []
+    videos = []
     
-    for file in os.listdir(COMPRESSED_DATA_DIR):
-       if(is_hdf5_file(file)):
-           output.append(os.path.join(COMPRESSED_DATA_DIR, file))  
+    for file in os.listdir(root):
+        if(is_hdf5_file(file)):
+           hdf5_files.append(os.path.join(root, file))  
+        elif(os.isdir(file) and file[-6:] == "_video"):
+            videos.append(os.path.join(root, file))
 
-    return output
+    return videos, hdf5_files
 
 def main():
     
-    # get folders to process
-    folders_to_process = get_folders_to_process(".")
+    folders_to_process = get_folders_to_process(INPUT_DIR) # get folders to process
+    
+    for folder in folders_to_process:
+        process_folder(os.path.join(INPUT_DIR, folder))
     
 def get_folders_to_process(root):
+    """ returns folders in current dir with format 2018-10-02 UNPROCESSED/ and no corresponding 2018-10-02 PROCESSED/ """
     
-    # folders in current dir with format 2018_10_02 UNPROCESSED/ and no corresponding 2018_10_02 PROCESSED/
+    processed_folders, unprocessed_folders = search_processed_folders(root)
+    
     folders = []
-    
-    for item in os.listdir(root):
-        if(os.path.isdir(os.path.join(root, item)) and ):
-            folders.append(item)
+    for un_folder in unprocessed_folders:
+        if(un_folder[:11] + un_folder[13:] not in processed_folders):
+            folders.append(un_folder)
             
     return folders
 
-def process_folder():
+def search_processed_folders(root):
     
-    files_to_process = get_files_to_process()
+    processed_folders = []
+    unprocessed_folders = []
+    
+    for file in os.listdir(root):
+        try:
+            if(os.path.isdir(os.path.join(root, file)) and file[-9:] == "PROCESSED"):
+                if(file[-10] == ' '):
+                    processed_folders.append(file)
+                elif(file[-12:-9] == " UN"):
+                    unprocessed_folders.append(file)
+        except:
+            pass
+            
+    return processed_folders, unprocessed_folders
+
+def process_folder(folder):
+    """ given folder =  INPUT_DIR//YYYY-MM-DD UNPROCESSED//
+    
+    | --> 2018-10-02 UNPROCESSED/
+             | --> 2018-10-02-1437.h5
+             | --> 2018-10-02-1437_videos/ (corresponding movie for each capture)
+                 | --> 0000.mov
+                 | --> 0001.mov
+                 | --> 0002.mov
+        
+    output:
+    | --> 2018-10-02 PROCESSED/
+        | --> 2018-10-02-1437_vehicles.h5 (vehicle_ID, video_frames, processed lidar image tuples)
+    
+    """
+    videos, hdf5_files = get_files(folder)
+    
     
     input_file = h5py.File("compressed_data.h5", 'r')
     keys = input_file.keys()
