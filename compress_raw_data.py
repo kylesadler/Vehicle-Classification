@@ -11,7 +11,7 @@
         --> raw_data_XYZ.log
     
     --> compressed_data
-        YYYYMMDDHHMMSS.h5
+        YYYY_MM_DD_HHMM.h5
     
     --> data_compressor.py
     
@@ -61,7 +61,7 @@ def main():
         files_to_delete =[]
         
         if(compressed_data_file_name == None):
-            compressed_data_file_name = dataset_name[:-2]
+            compressed_data_file_name = dataset_name[:4]+"_"+dataset_name[4:6]+"_"+dataset_name[6:8]+"_"+dataset_name[8:-2]
         
         try: # to initialize compressed_data_file
             compressed_data_file = h5py.File(os.path.join(OUTPUT_DIR, compressed_data_file_name + ".h5"), 'a')

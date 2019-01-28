@@ -13,8 +13,9 @@
     
 
     | --> compressed_data/
-         | -->20181002143759.h5
-         | -->xxxxxxxxxxxxxx.h5 (one for each capture)
+         | -->2018_10_02_1437.h5
+         | -->xxxx_xx_xx_xxxx.h5 (one for each distinct capture)
+    | --> videos
     
     output:
     | --> processed_data/
