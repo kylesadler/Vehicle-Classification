@@ -27,7 +27,7 @@ import numpy as np
 import h5py
 
 INPUT_DIR = "raw_data"
-OUTPUT_DIR = "compressed_data"
+OUTPUT_DIR = None
 LOG_FILE_NAME = "data_compressor_error_log.log"
 MIN_TO_SLEEP = 0.01;  # time to let files complete writing before processing, 2x lidar output interval suggested
 BASE_OF_DATA_POINTS = 16 # should be in hexadecimal
@@ -35,8 +35,7 @@ ERRORS_ONLY = False
 
 log_file = open(LOG_FILE_NAME, "a+")  # opens the log file (or creates it if it does not exist)
 incorrectly_formatted_files = [] # so warnings don't flood error log
-if not os.path.exists(OUTPUT_DIR): # make OUTPUT_DIR if it doesn't exist
-    os.makedirs(OUTPUT_DIR)
+
 
 
 def main():
@@ -62,6 +61,9 @@ def main():
         
         if(compressed_data_file_name == None):
             compressed_data_file_name = dataset_name[:4]+"_"+dataset_name[4:6]+"_"+dataset_name[6:8]+"_"+dataset_name[8:-2]
+            OUTPUT_DIR = compressed_data_file_name[:10] +"_data"
+            if not os.path.exists(OUTPUT_DIR): # make OUTPUT_DIR if it doesn't exist
+                os.makedirs(OUTPUT_DIR)
         
         try: # to initialize compressed_data_file
             compressed_data_file = h5py.File(os.path.join(OUTPUT_DIR, compressed_data_file_name + ".h5"), 'a')
