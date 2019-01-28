@@ -32,8 +32,8 @@ from datetime import datetime
 import os
 from Tools.scripts.finddiv import process
 
-INPUT_DIR = "data" # where all the data is stored, if in same folder as this script, INPUT_DIR = "."
-
+WORKING_DIR = "data" # where all the data is stored, if in same folder as this script, WORKING_DIR = "."
+VID_FILE_EXTENSION = ".MTS"
 
 def normalize_vehicle(v):
     """ takes in numpy array of vehicle data, processes it, returns numpy array of vehicle data """
@@ -110,8 +110,15 @@ def process_vehicle(v):
     normalize_vehicle(v)
     
 def is_hdf5_file(file):
-    name = file.split(".")
-    return name[1] == "h5"
+    return file[-3:] == ".h5"
+
+def get_video_files(folder):
+    videos = []
+    for file in os.listdir(folder):
+        if(file[-len(VID_FILE_EXTENSION):] ==  VID_FILE_EXTENSION):
+            videos.append(os.path.join(folder, file))
+    
+    return videos
 
 def get_hdf5_and_vid_dir(folder):
     hdf5_files = []
@@ -145,10 +152,10 @@ def get_file_pairs(root):
 
 def main():
     
-    folders_to_process = get_folders_to_process(INPUT_DIR) # get folders to process
+    folders_to_process = get_folders_to_process(WORKING_DIR) # get folders to process
     
     for folder in folders_to_process:
-        process_folder(os.path.join(INPUT_DIR, folder))
+        process_folder(os.path.join(WORKING_DIR, folder))
     
 def get_folders_to_process(root):
     """ returns folders in current dir with format 2018-10-02 UNPROCESSED/ and no corresponding 2018-10-02 PROCESSED/ """
@@ -180,7 +187,7 @@ def search_processed_folders(root):
     return processed_folders, unprocessed_folders
 
 def process_folder(folder):
-    """ given folder =  INPUT_DIR//YYYY-MM-DD UNPROCESSED//
+    """ given folder =  WORKING_DIR//YYYY-MM-DD UNPROCESSED//
     
     | --> 2018-10-02 UNPROCESSED/
              | --> 2018-10-02-1437.h5
@@ -201,13 +208,13 @@ def process_folder(folder):
         video_folder = file_pair[0]  
         hdf5_file = file_pair[1]  
         
-        process_files(hdf5_file, video_folder, INPUT_DIR)
+        process_files(hdf5_file, video_folder, WORKING_DIR)
         
         
 def process_files(hdf5_file_path, video_folder_path, output_dir):
     """ given paths to corresponding hdf5 file and video folder
-        hdf5_file_path = INPUT_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMM.h5
-        video_folder_path = INPUT_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMM_video
+        hdf5_file_path = WORKING_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMM.h5
+        video_folder_path = WORKING_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMM_video
     
          | --> 2018-10-02-1437.h5
          | --> 2018-10-02-1437_video/ (corresponding movie for each capture)
@@ -220,6 +227,8 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
         | --> 2018-10-02-1437_vehicles.h5 (vehicle_ID, video_frames, processed lidar image tuples)
     """
     
+    video_files = get_video_files(video_folder_path)
+    video_files.sort()
     head, hdf5_file_name = os.path.split(hdf5_file_path)
     output_dir_path = os.path.join(output_dir, hdf5_file_name[:10] + " PROCESSED")
     
@@ -227,6 +236,15 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     hdf5_input_file = h5py.File(hdf5_file_path, 'r')
     keys = hdf5_input_file.keys()
     keys.sort() # ensure that data is processed in order
+    
+    
+    """
+        variables:
+        hdf5_output_file
+        hdf5_input_file
+        keys (sorted)
+        video_files (sorted)
+    """
     
     are_more_vehicles = True
     
