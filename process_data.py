@@ -113,7 +113,7 @@ def is_hdf5_file(file):
     name = file.split(".")
     return name[1] == "h5"
     
-def get_files(root):
+def get_file_pairs(root):
     
     """ return [[video_dir, h5 file], [video_dir, h5 file], ... ] """ # TODO
     file_pairs = []
@@ -178,11 +178,11 @@ def process_folder(folder):
     
     """
     # for multiple collections on the same date
-    file_array = get_files(folder) # files[data_collection_num][file_type: 0 = video_dir, 1 = hdf5_file]
+    file_pairs = get_file_pairs(folder) # files[data_collection_num][file_type: 0 = video_dir, 1 = hdf5_file]
     
-    for file_set in file_array:
-        video_folder = file_set[0]  
-        hdf5_file = file_set[1]  
+    for file_pair in file_pairs:
+        video_folder = file_pair[0]  
+        hdf5_file = file_pair[1]  
         
         process_files(hdf5_file, video_folder)
         
