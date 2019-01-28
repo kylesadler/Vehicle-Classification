@@ -29,10 +29,9 @@
 import numpy as np
 import h5py
 from datetime import datetime
+import os
 
 INPUT_DIR = "data" # where all the data is stored
-OUTPUT_DIR = "processed_data"
-
 
 
 def normalize_vehicle(v):
@@ -123,6 +122,21 @@ def get_files_to_process():
     return output
 
 def main():
+    
+    # get folders to process
+    folders_to_process = get_folders_to_process(".")
+    
+def get_folders_to_process(root):
+    
+    folders =[]
+    
+    for item in os.listdir(root):
+        if(os.path.isdir(os.path.join(root, item)) and ):
+            folders.append(item)
+            
+    return folders
+
+def process_folder():
     
     files_to_process = get_files_to_process()
     
