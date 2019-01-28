@@ -11,7 +11,16 @@
     time is vertical starting with earliest time
     data[time][position]
     
-    ONlY WORKS AFTER ALL DATA HAS BEEN WRITTEN INTO /compressed_data
+
+    | --> compressed_data/
+         | -->20181002143759.h5
+         | -->xxxxxxxxxxxxxx.h5 (one for each capture)
+    
+    output:
+    | --> processed_data/
+        | --> vehicles.h5
+    
+    
 """
 
 import numpy as np

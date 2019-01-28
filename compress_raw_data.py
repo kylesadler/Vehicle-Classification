@@ -29,7 +29,7 @@ import h5py
 INPUT_DIR = "raw_data"
 OUTPUT_DIR = "compressed_data"
 LOG_FILE_NAME = "data_compressor_error_log.log"
-MIN_TO_SLEEP = 0.01;  # time to let files complete writing before processing, 3x lidar output interval suggested
+MIN_TO_SLEEP = 0.01;  # time to let files complete writing before processing, 2x lidar output interval suggested
 BASE_OF_DATA_POINTS = 16 # should be in hexadecimal
 ERRORS_ONLY = False
 
@@ -41,8 +41,7 @@ if not os.path.exists(OUTPUT_DIR): # make OUTPUT_DIR if it doesn't exist
 
 def main():
     
-    compressed_data_file_name = str(datetime.datetime.now()).replace(":","").replace(" ","").replace(".","").replace("-","")
-
+    compressed_data_file_name = None
     
     while(True):
         
@@ -61,6 +60,8 @@ def main():
         compressed_data = [] # data for the entire loop of files
         files_to_delete =[]
         
+        if(compressed_data_file_name == None):
+            compressed_data_file_name = dataset_name
         
         try: # to initialize compressed_data_file
             compressed_data_file = h5py.File(os.path.join(OUTPUT_DIR, compressed_data_file_name + ".h5"), 'a')
@@ -122,7 +123,7 @@ def main():
 def get_name(file):
     f = open(os.path.join(INPUT_DIR, file), "r")
     
-    return f.readline()[:23].replace(":","").replace(".","").replace("-","").replace(" ","")
+    return f.readline()[:19].replace(":","").replace(".","").replace("-","").replace(" ","")
     
           
 def is_raw_data(f):
