@@ -1,4 +1,9 @@
-""" This module:
+""" 
+
+TODO: figure out video/data synchronizing
+
+
+This module:
         (1) takes in compressed raw lidar in hdf5 files
         (2) identifies vehicles and normalizes data
         (4) stores processed vehicle data as m x n images in hfd5 file
