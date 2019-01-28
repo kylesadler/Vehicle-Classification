@@ -35,6 +35,10 @@ from Tools.scripts.finddiv import process
 WORKING_DIR = "data" # where all the data is stored, if in same folder as this script, WORKING_DIR = "."
 VID_FILE_EXTENSION = ".MTS"
 
+# internal global variables for find_vehicle()
+video_start = 0
+lidar_data_start = 0
+
 
 
 
@@ -61,7 +65,7 @@ def vehicle_detected(a):
 def find_vehicle(hdf5_input_file, keys, video_files, start_time):
     """
         given: input_file, keys (sorted chronologically), start_time
-        return are_more_vehicles, end_time, vehicle_ID (unique), vehicle_image (numpy array), video_frames
+        return are_more_vehicles, vehicle_ID (unique), vehicle_image (numpy array), video_frames
     """
     lidar_data = np.array(hdf5_file.get(k)) # array
     
@@ -285,12 +289,11 @@ def parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file): # TODO
     
     are_more_vehicles = True
     
-    start = 0
     
     while(are_more_vehicles):
         
         
-        are_more_vehicles, start, vehicle_ID, vehicle_image, video_frames = find_vehicle(hdf5_input_file, keys, video_files, start)
+        are_more_vehicles, vehicle_ID, vehicle_image, video_frames = find_vehicle(hdf5_input_file, keys, video_files, start)
         
         
         # process vehicle image
@@ -298,10 +301,16 @@ def parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file): # TODO
         
         try:
             hdf5_output_file.create_dataset(str(vehicle_ID), data=processed_vehicle_image)
-            push_to_database(vehicle_ID, video_frames)
         except:
             print("dataset " + str(vehicle_ID)+" has already been created.")
             raise
+        
+        try:
+            push_to_database(vehicle_ID, video_frames)
+        except:
+            print("could not push " + str(vehicle_ID) + " to database.")
+            raise
+        
 
 
 def push_to_database(v_ID, video_frames):
