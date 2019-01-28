@@ -65,7 +65,8 @@ def vehicle_detected(a):
 def find_vehicle(hdf5_input_file, keys, video_files, start_time):
     """
         given: input_file, keys (sorted chronologically), start_time
-        return are_more_vehicles, vehicle_ID (unique), vehicle_image (numpy array), video_frames
+        return vehicle_ID (unique), vehicle_image (numpy array), video_frames
+            or if there is no more data, return None, None, None
     """
     lidar_data = np.array(hdf5_file.get(k)) # array
     
@@ -125,7 +126,7 @@ def find_vehicle(hdf5_input_file, keys, video_files, start_time):
     
 def process_vehicle_image(v):
     """ given a numpy array of a vehicle image, process it """
-    normalize_vehicle(v)
+    return normalize_vehicle(v)
     
 def is_hdf5_file(file):
     return file[-3:] == ".h5"
@@ -287,13 +288,13 @@ def parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file): # TODO
     
     
     
-    are_more_vehicles = True
+    vehicle_ID = True
     
     
-    while(are_more_vehicles):
+    while(vehicle_ID != None):
         
         
-        are_more_vehicles, vehicle_ID, vehicle_image, video_frames = find_vehicle(hdf5_input_file, keys, video_files, start)
+        vehicle_ID, vehicle_image, video_frames = find_vehicle(hdf5_input_file, keys, video_files, start)
         
         
         # process vehicle image
