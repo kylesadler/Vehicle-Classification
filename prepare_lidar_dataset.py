@@ -12,17 +12,15 @@
     data[time][position]
     
 
-    | --> compressed_data/
+    | --> 2018_10_02_UNPROCESSED/
          | --> 2018_10_02_1437.h5
-         | --> YYYY_MM_DD_HHMM.h5 (one for each distinct capture)
-    | --> videos/
-         | --> 2018_10_02_1437/ (corresponding folder for each capture)
+         | --> 2018_10_02_1437/ (corresponding movie for each capture)
              | --> 0000.mov
              | --> 0001.mov
              | --> 0002.mov
         
     output:
-    | --> processed_data/
+    | --> 2018_10_02_processed/
         | --> 2018_10_02_1437_vehicles.h5 (vehicle_ID, video_frames, processed lidar image tuples)
     
     
