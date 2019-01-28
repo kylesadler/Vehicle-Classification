@@ -118,10 +118,13 @@ def get_hdf5_and_vid_dir(folder):
     vid_dirs = []
     
     for file in os.listdir(folder):
-        if(os.isdir(file) and file[-6:] == "_video"): # is a video dir
-            vid_dirs.append(os.path.join(folder, file))
-        elif(is_hdf5_file(file)):
-            hdf5_files.append(os.path.join(folder, file))
+        try:
+            if(os.isdir(file) and file[-6:] == "_video"): # is a video dir
+                vid_dirs.append(os.path.join(folder, file))
+            elif(is_hdf5_file(file)):
+                hdf5_files.append(os.path.join(folder, file))
+        except:
+            pass
 
     return vid_dirs, hdf5_files
     
@@ -132,8 +135,11 @@ def get_file_pairs(root):
     
     for vid_dir in vid_dirs:
         for hf in hdf5_files:
-            if(vid_dir[:15] == hf[:15]):
-                file_pairs.append([vid_dir, hf])
+            try:
+                if(vid_dir[:15] == hf[:15]):
+                    file_pairs.append([vid_dir, hf])
+            except:
+                pass
                 
     return file_pairs
 
@@ -178,7 +184,7 @@ def process_folder(folder):
     
     | --> 2018-10-02 UNPROCESSED/
              | --> 2018-10-02-1437.h5
-             | --> 2018-10-02-1437_videos/ (corresponding movie for each capture)
+             | --> 2018-10-02-1437_video/ (corresponding movie for each capture)
                  | --> 0000.mov
                  | --> 0001.mov
                  | --> 0002.mov
@@ -195,16 +201,32 @@ def process_folder(folder):
         video_folder = file_pair[0]  
         hdf5_file = file_pair[1]  
         
-        process_files(hdf5_file, video_folder)
+        process_files(hdf5_file, video_folder, INPUT_DIR)
         
         
-def process_files(hdf5_file, video_folder):
-
-    input_file = h5py.File("compressed_data.h5", 'r')
-    keys = input_file.keys()
-    keys.sort() # ensure that data is processed in order
+def process_files(hdf5_file_path, video_folder_path, output_dir):
+    """ given paths to corresponding hdf5 file and video folder
+        hdf5_file_path = INPUT_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMM.h5
+        video_folder_path = INPUT_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMM_video
     
-    output_file = h5py.File(os.path.join(OUTPUT_DIR, "vehicles.h5"), 'a')
+         | --> 2018-10-02-1437.h5
+         | --> 2018-10-02-1437_video/ (corresponding movie for each capture)
+             | --> 0000.mov
+             | --> 0001.mov
+             | --> 0002.mov
+        
+    output:
+    | --> 2018-10-02 PROCESSED/
+        | --> 2018-10-02-1437_vehicles.h5 (vehicle_ID, video_frames, processed lidar image tuples)
+    """
+    
+    head, hdf5_file_name = os.path.split(hdf5_file_path)
+    output_dir_path = os.path.join(output_dir, hdf5_file_name[:10] + " PROCESSED")
+    
+    hdf5_output_file = h5py.File(os.path.join(output_dir_path, hdf5_file_name[:-3]+"_vehicles.h5"), 'a')
+    hdf5_input_file = h5py.File(hdf5_file_path, 'r')
+    keys = hdf5_input_file.keys()
+    keys.sort() # ensure that data is processed in order
     
     are_more_vehicles = True
     
