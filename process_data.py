@@ -112,18 +112,29 @@ def process_vehicle(v):
 def is_hdf5_file(file):
     name = file.split(".")
     return name[1] == "h5"
+
+def get_hdf5_and_vid_dir(folder):
+    hdf5_files = []
+    vid_dirs = []
+    
+    for file in os.listdir(folder):
+        if(os.isdir(file) and file[-6:] == "_video"): # is a video dir
+            vid_dirs.append(os.path.join(folder, file))
+        elif(is_hdf5_file(file)):
+            hdf5_files.append(os.path.join(folder, file))
+
+    return vid_dirs, hdf5_files
     
 def get_file_pairs(root):
     
-    """ return [[video_dir, h5 file], [video_dir, h5 file], ... ] """ # TODO
-    file_pairs = []
+    """ return [[video_dir, h5 file], [video_dir, h5 file], ... ] """
+    vid_dirs, hdf5_files = get_hdf5_and_vid_dir(root)
     
-    for file in os.listdir(root):
-        if(is_hdf5_file(file)):
-           hdf5_files.append(os.path.join(root, file))  
-        elif(os.isdir(file) and file[-6:] == "_video"):
-            videos.append(os.path.join(root, file))
-
+    for vid_dir in vid_dirs:
+        for hf in hdf5_files:
+            if(vid_dir[:15] == hf[:15]):
+                file_pairs.append([vid_dir, hf])
+                
     return file_pairs
 
 def main():
