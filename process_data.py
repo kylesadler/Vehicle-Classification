@@ -114,8 +114,9 @@ def is_hdf5_file(file):
     return name[1] == "h5"
     
 def get_files(root):
-    hdf5_files = []
-    videos = []
+    
+    """ return [[video_dir, h5 file], [video_dir, h5 file], ... ] """ # TODO
+    file_pairs = []
     
     for file in os.listdir(root):
         if(is_hdf5_file(file)):
@@ -123,7 +124,7 @@ def get_files(root):
         elif(os.isdir(file) and file[-6:] == "_video"):
             videos.append(os.path.join(root, file))
 
-    return videos, hdf5_files
+    return file_pairs
 
 def main():
     
@@ -176,9 +177,18 @@ def process_folder(folder):
         | --> 2018-10-02-1437_vehicles.h5 (vehicle_ID, video_frames, processed lidar image tuples)
     
     """
-    videos, hdf5_files = get_files(folder)
+    # for multiple collections on the same date
+    file_array = get_files(folder) # files[data_collection_num][file_type: 0 = video_dir, 1 = hdf5_file]
     
-    
+    for file_set in file_array:
+        video_folder = file_set[0]  
+        hdf5_file = file_set[1]  
+        
+        process_files(hdf5_file, video_folder)
+        
+        
+def process_files(hdf5_file, video_folder):
+
     input_file = h5py.File("compressed_data.h5", 'r')
     keys = input_file.keys()
     keys.sort() # ensure that data is processed in order
@@ -190,7 +200,6 @@ def process_folder(folder):
     start = 0
     
     while(are_more_vehicles):
-        
         are_more_vehicles, start, vehicle, vehicle_ID = find_vehicle(input_file, keys, start)
         
         # normalize vehicle
