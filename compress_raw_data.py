@@ -60,7 +60,7 @@ def main():
         files_to_delete =[]
         
         if(compressed_data_file_name == None):
-            compressed_data_file_name = dataset_name[:4]+"_"+dataset_name[4:6]+"_"+dataset_name[6:8]+"_"+dataset_name[8:-2]
+            compressed_data_file_name = dataset_name[:4]+"-"+dataset_name[4:6]+"-"+dataset_name[6:8]+"-"+dataset_name[8:-2]
             OUTPUT_DIR = compressed_data_file_name[:10] +" UNPROCESSED"
             if not os.path.exists(OUTPUT_DIR): # make OUTPUT_DIR if it doesn't exist
                 os.makedirs(OUTPUT_DIR)

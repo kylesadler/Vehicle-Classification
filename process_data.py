@@ -128,7 +128,8 @@ def main():
     
 def get_folders_to_process(root):
     
-    folders =[]
+    # folders in current dir with format 2018_10_02 UNPROCESSED/ and no corresponding 2018_10_02 PROCESSED/
+    folders = []
     
     for item in os.listdir(root):
         if(os.path.isdir(os.path.join(root, item)) and ):
