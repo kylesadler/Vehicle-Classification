@@ -2,6 +2,8 @@
 
 TODO: figure out video/data synchronizing
 
+Note: sorry for the long names, just trying to keep organized
+
 
 This module:
         (1) takes in compressed raw lidar in hdf5 files
@@ -28,7 +30,7 @@ This module:
     | --> 2018-10-02 PROCESSED/
         | --> 2018-10-02-1437_vehicles.h5 (vehicle_ID, processed lidar)
         | --> 2018-10-02-1437_vehicles.csv (vehicle_ID, photo_ID)
-        | --> photos
+        | --> 2018-10-02-1437_photos
             | --> 00000000_0.png (x photos for each photo_ID)
             | --> 00000000_1.png
             | --> 00000000_2.png
@@ -254,52 +256,76 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
         | --> 2018-10-02-1437_vehicles.h5 (vehicle_ID, video_frames, processed lidar image tuples)
     """
     
-    video_files = get_video_files(video_folder_path)
-    video_files.sort()
+    
+    """                               """
+    """                               """
+    """  make all input/output files  """
+    """                               """
+    """                               """
+    
+    # get list of all the video file paths
+    input_video_file_paths = get_video_files(video_folder_path)
+    input_video_file_paths.sort()
+    
+    
+    # make output_dir_path if it doesn't exist
     head, hdf5_file_name = os.path.split(hdf5_file_path)
     output_dir_path = os.path.join(output_dir, hdf5_file_name[:10] + " PROCESSED")
-    
-    """                           """
-    """ make all the output files """
-    """                           """
-    """                           """
-    
-    
-    if not os.path.exists(output_dir_path): # make output_dir_path if it doesn't exist
+    if not os.path.exists(output_dir_path):
         os.makedirs(output_dir_path)
     
-    hdf5_output_file = h5py.File(os.path.join(output_dir_path, hdf5_file_name[:-3]+"_vehicles.h5"), 'a')
-    hdf5_input_file = h5py.File(hdf5_file_path, 'r')
-    keys = hdf5_input_file.keys()
-    keys.sort() # ensure that data is processed in order
+    # make output hdf5 file -- stores (vechicle_ID, lidar_signature) 
+    output_lidar_signature_hdf5 = h5py.File(os.path.join(output_dir_path, hdf5_file_name[:-3]+"_vehicles.h5"), 'a')
     
-    csv_file = open(os.path.join(output_dir_path,hdf5_file_name[:-3]+"_vehicles.csv"), 'a')
-    csv_file.write("vehicle_ID,start_photo")
+    # open input hdf5 file -- stores compressed lidar data
+    input_lidar_data_hdf5 = h5py.File(hdf5_file_path, 'r')
+    input_lidar_data_keys = input_lidar_data_hdf5.keys()
+    input_lidar_data_keys.sort() # ensure that data is processed in order
+    
+    # make output csv file -- (stores vehcile_ID, photo_ID)
+    output_photo_IDs_csv = open(os.path.join(output_dir_path,hdf5_file_name[:-3]+"_vehicles.csv"), 'a')
+    output_photo_IDs_csv.write("vehicle_ID,photo_ID")
+    
+    # make output folder for photos
+    output_photo_folder_path = os.path.join(output_dir_path,hdf5_file_name[:-3]+"photos")
+    if not os.path.exists(output_photo_folder_path):
+        os.makedirs(output_photo_folder_path)
     
     
     """
         variables:
-            hdf5_output_file
-            hdf5_input_file
-            keys        (sorted chronologically)
-            video_files (sorted chronologically)
+            output_lidar_signature_hdf5
+            input_lidar_data_hdf5
+            input_lidar_data_keys        (sorted chronologically)
+            input_video_file_paths (sorted chronologically)
     """
-    parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file, csv_file)
+    # process all the vehicles
+    parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, output_lidar_signature_hdf5, output_photo_IDs_csv, output_photo_folder_path)
     
-    hdf5_output_file.close()
+    
+    # close all the files
+    output_lidar_signature_hdf5.close()
+    output_photo_IDs_csv.close()
+    output_lidar_signature_hdf5.close()
+    
         
-def parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file, csv_file): # TODO
+def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, output_lidar_signature_hdf5, output_photo_IDs_csv, output_photo_folder_path):
     """
-        parse vehicles and store them in hdf5_output_file
+        parse vehicles and store them in output_lidar_signature_hdf5
         
         given:
-            hdf5_output_file
-            hdf5_input_file
-            keys        (sorted chronologically)
-            video_files (sorted chronologically)
+            
+            input_lidar_data_hdf5
+            input_lidar_data_keys      (sorted chronologically)
+            input_video_file_paths     (sorted chronologically)
+            output_photo_IDs_csv        
+            output_photo_folder_path
+            output_lidar_signature_hdf5
         
         output:
-            hdf5_output_file(vehicle_ID, video_frames, processed lidar image tuples)
+            a populated hdf5_output_file with (vehicle_ID, processed lidar images)
+            a populated output_photo_IDs_csv with (vehicle_ID, photo_ID)
+            photos of vehicles in output_photo_folder_path
     """
     
     # while(parser.has_data())
@@ -319,7 +345,7 @@ def parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file, csv_fil
     while(vehicle_ID != None):
         
         
-        vehicle_ID, vehicle_image, video_frames = find_vehicle(hdf5_input_file, keys, video_files, start)
+        vehicle_ID, vehicle_image, video_frames = find_vehicle(input_lidar_data_hdf5, input_lidar_data_keys, video_files, start)
         
         
         # process vehicle image
