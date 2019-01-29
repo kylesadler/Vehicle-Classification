@@ -269,46 +269,35 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
             a populated output_photo_IDs_csv with (vehicle_ID, photo_ID)
             photos of vehicles in output_photo_folder_path
     """
-    
-    # while(parser.has_data())
-        # new objects? - video parser and data parser
-        # go through data and videos together (scrolling FIFO -- collections.deque)
-        # 
-        # if vehicle is detected:
-            # capture vehicle image and associated video frames
-            # save image and video frames to hdf5_output_file
-        # make sure that video matches lidar signal
+
     
     # initialize variables
-    current_key = input_lidar_data_keys[0]
-    current_index = 0
+    current_key = input_lidar_data_keys[0]  # current data chunk in input_lidar_data_hdf5
+    current_index = 0                       # current index in current chunk
     
     
-    # while not reached end of lidar_data in input_lidar_data_hdf5
-    while(current_key != input_lidar_data_keys[-1] and current_index == len(current_key)-1):
+    # while not reached end of lidar data in input_lidar_data_hdf5
+    while(current_key != input_lidar_data_keys[-1] or current_index != len(current_key)-1):
         
         
         vehicle_ID, vehicle_image, video_frames = find_vehicle(input_lidar_data_hdf5, input_lidar_data_keys, video_files, start)
         
-        try:
-            vehicle_ID = str(vehicle_ID)
-        except: # when this fails, vehicle_ID == None and find_vehicles has stopped parsing
-            break
         
-        # process vehicle image
-        processed_vehicle_image = process_vehicle_image(vehicle_image)
+        """ need vehicle_ID (str), photo_ID (str), vehicle_image """        
         
-        try:
-            hdf5_output_file.create_dataset(str(vehicle_ID), data=processed_vehicle_image)
-        except:
-            print("dataset " + str(vehicle_ID)+" has already been created.")
-            raise
         
-        try:
-            csv_file.write(str(vehicle_ID)+",")
-        except:
-            print("could not write " + str(vehicle_ID) + " to database file.")
-            raise
+        try: # to process and save vehicle image
+            processed_vehicle_image = process_vehicle_image(vehicle_image)
+            hdf5_output_file.create_dataset(vehicle_ID, data=processed_vehicle_image)
+        except Exception as e:
+            print("dataset " + vehicle_ID + " cannot be created in file: "+hdf5_output_file.name)
+            print(repr(e))
+        
+        try: # to save photo_ID
+            output_photo_IDs_csv.write(vehicle_ID + "," + photo_ID)
+        except Exception as e:
+            print("could not write " + vehicle_ID + " to csv file: " + output_photo_IDs_csv.name)
+            print(repr(e))
         
 
     """
