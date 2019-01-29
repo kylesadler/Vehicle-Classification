@@ -53,10 +53,6 @@ from Tools.scripts.finddiv import process
 WORKING_DIR = "data" # where all the data is stored, if in same folder as this script, WORKING_DIR = "."
 VID_FILE_EXTENSION = ".MTS"
 
-# internal global variables for find_vehicle()
-video_start = 0
-lidar_data_start = 0
-
 
 
 
@@ -80,12 +76,10 @@ def vehicle_detected(a):
     pass
 
 
-def find_vehicle(hdf5_input_file, keys, video_files, start_time):
-    
-        
     
 def process_vehicle_image(v):
     """ given a numpy array of a vehicle image, process it """
+    # TODO crop vertically
     return normalize_vehicle(v)
     
 def is_hdf5_file(file):
@@ -274,18 +268,17 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
     
     
     count = 0 # consecutive measurements with a vehicle detected
-    current_vehicle =[]
+    current_vehicle = []
     recording_vehicle = False
     
     
     # loop through everything normally, keeping track of all possible vehicles
     # (therefore no need to access data between datasets)
     for key in input_lidar_data_keys:
-        lidar_data = np.array(input_lidar_data_hdf5.get(key)) 
         
-        for lidar_measurement in lidar_data:
+        for lidar_measurement in np.array(input_lidar_data_hdf5.get(key)):
             
-            vehicle_present= vehicle_detected(lidar_measurement)
+            vehicle_present = vehicle_detected(lidar_measurement)
             
             # if there isn't a vehicle in the current frame and we are not recording a current vehicle, continue
             if(not vehicle_present and not recording_vehicle): 
