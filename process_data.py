@@ -26,7 +26,18 @@ This module:
         
     output:
     | --> 2018-10-02 PROCESSED/
-        | --> 2018-10-02-1437_vehicles.h5 (vehicle_ID, video_frames, processed lidar image tuples)
+        | --> 2018-10-02-1437_vehicles.h5 (vehicle_ID, processed lidar)
+        | --> 2018-10-02-1437_vehicles.csv (vehicle_ID, photo_ID)
+        | --> photos
+            | --> 00000000_0.png (x photos for each photo_ID)
+            | --> 00000000_1.png
+            | --> 00000000_2.png
+            | --> 00000000_3.png
+            |       ...
+            | --> 00000001_0.png
+            | --> 00000001_1.png
+            | --> 00000001_2.png
+            | --> 00000001_3.png
     
     
 """
@@ -248,6 +259,12 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     head, hdf5_file_name = os.path.split(hdf5_file_path)
     output_dir_path = os.path.join(output_dir, hdf5_file_name[:10] + " PROCESSED")
     
+    """                           """
+    """ make all the output files """
+    """                           """
+    """                           """
+    
+    
     if not os.path.exists(output_dir_path): # make output_dir_path if it doesn't exist
         os.makedirs(output_dir_path)
     
@@ -255,6 +272,9 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     hdf5_input_file = h5py.File(hdf5_file_path, 'r')
     keys = hdf5_input_file.keys()
     keys.sort() # ensure that data is processed in order
+    
+    csv_file = open(os.path.join(output_dir_path,hdf5_file_name[:-3]+"_vehicles.csv"), 'a')
+    csv_file.write("vehicle_ID,start_photo")
     
     
     """
@@ -264,11 +284,11 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
             keys        (sorted chronologically)
             video_files (sorted chronologically)
     """
-    parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file)
+    parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file, csv_file)
     
     hdf5_output_file.close()
         
-def parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file): # TODO
+def parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file, csv_file): # TODO
     """
         parse vehicles and store them in hdf5_output_file
         
@@ -312,16 +332,16 @@ def parse_vehicles(hdf5_input_file, keys, video_files, hdf5_output_file): # TODO
             raise
         
         try:
-            push_to_database(vehicle_ID, video_frames)
+            push_to_database(vehicle_ID, video_frames, csv_file)
         except:
-            print("could not push " + str(vehicle_ID) + " to database.")
+            print("could not write " + str(vehicle_ID) + " to database file.")
             raise
         
 
 
-def push_to_database(v_ID, video_frames):
+def push_to_database(v_ID, video_frames, csv_file):
     """ v_ID is int, video_frames is list """
-    pass # ask about this
+    csv_file.write(str(v_ID)+",")
 
 
 
