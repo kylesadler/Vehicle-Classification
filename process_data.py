@@ -280,14 +280,62 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
     current_data_pointer = 0            # index of current pointer in current_key dataset
     current_image_pointer = 0           # index of the current image in current_video
     
+    count = 0 # consecutive measurements with a vehicle detected
+    current_vehicle =[]
+    recording_vehicle = False
     
+        
     # while not reached end of lidar data in input_lidar_data_hdf5
     while(current_key != input_lidar_data_keys[-1] or current_index != len(current_key)-1):
         lidar_data = np.array(input_lidar_data_hdf5.get(current_key)) # array
         
-        for lidar_measurement in lidar_data:
-            if(vehicle_detected(lidar_measurement)):
+        for time in range(len(lidar_data)):
+            
+            # lidar_data[time][position] is a data capture at a specific time and position
+            lidar_measurement = lidar_data[time]
+            
+            vehicle_present= vehicle_detected(lidar_measurement)
+            
+            # if there isn't a vehicle in the current frame and we are not recording a current vehicle, continue
+            if(not vehicle_present and not recording_vehicle): 
+                continue
+            
+            elif(vehicle_present and not recording_vehicle):
+                count+=1
                 
+                if(count > DETECTION_THRESHOLD):
+                    
+                    count = 0
+                    
+                    for i in range(DETECTION_THRESHOLD): # add previous points to vehicle
+                        current_vehicle.append(data[time - DETECTION_THRESHOLD + i])#
+                    
+                    recording_vehicle = True            
+                
+            
+            elif(not vehicle_present and recording_vehicle):
+                count+=1
+                
+                if(count > DETECTION_THRESHOLD):
+                    
+                    count = 0
+                    
+                    current_vehicle = current_vehicle[:len(current_vehicle)-DETECTION_THRESHOLD]
+                    
+                    # stop recording vehicle
+                    
+                    recording_vehicle = False    
+                    
+                    processed_vehicles.append(normalize_vehicle(current_vehicle))
+                    current_vehicle = []
+                
+                
+                
+            if(recording_vehicle): # add data point to current vehicle
+                
+                current_vehicle.append(measurement)
+                    
+                    
                 save(vehicle_ID, vehicle_image, photo_ID, hdf5_output_file, output_photo_IDs_csv)
         
 
@@ -297,58 +345,7 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
             or if there is no more data, return None, None, None
     """
     
-    count = 0 # consecutive measurements with a vehicle detected
-    current_vehicle =[]
-    recording_vehicle = False
-    
-    # find vehicles
-    for time in range(len(lidar_data)):
-       
-        # data[time][position], measurement is a data capture at a specific time
-        # go through measurements identifying vehicles; if vehicle is found, process and add to list
         
-        measurement = lidar_data[time]
-        
-        vehicle_present = vehicle_detected(measurement)
-        
-        # if there isn't a vehicle in the current frame and we are not recording a current vehicle, continue
-        if(not vehicle_present and not recording_vehicle): 
-            continue
-        
-        elif(vehicle_present and not recording_vehicle):
-            count+=1
-            
-            if(count > DETECTION_THRESHOLD):
-                
-                count = 0
-                
-                for i in range(DETECTION_THRESHOLD): # add previous points to vehicle
-                    current_vehicle.append(data[time - DETECTION_THRESHOLD + i])#
-                
-                recording_vehicle = True            
-            
-        
-        elif(not vehicle_present and recording_vehicle):
-            count+=1
-            
-            if(count > DETECTION_THRESHOLD):
-                
-                count = 0
-                
-                current_vehicle = current_vehicle[:len(current_vehicle)-DETECTION_THRESHOLD]
-                
-                # stop recording vehicle
-                
-                recording_vehicle = False    
-                
-                processed_vehicles.append(normalize_vehicle(current_vehicle))
-                current_vehicle = []
-            
-            
-            
-        if(recording_vehicle): # add data point to current vehicle
-            
-            current_vehicle.append(measurement)
 
 def save(vehicle_ID, vehicle_image, photo_ID, hdf5_output_file, output_photo_IDs_csv):
     """ save vehicle_ID (str), photo_ID (str), vehicle_lidar_image (np array) in specified files"""        
