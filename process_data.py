@@ -227,15 +227,12 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     if not os.path.exists(output_photo_folder_path):
         os.makedirs(output_photo_folder_path)
     
+    """                               """
+    """                               """
+    """   process all the vehicles    """
+    """                               """
+    """                               """
     
-    """
-        variables:
-            output_lidar_signature_hdf5
-            input_lidar_data_hdf5
-            input_lidar_data_keys        (sorted chronologically)
-            input_video_file_paths (sorted chronologically)
-    """
-    # process all the vehicles
     """
         parse vehicles and store them in output_lidar_signature_hdf5
         
@@ -277,9 +274,24 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                 else:
                     gap_count += 1
                     
+                    # save everything
                     if(gap_count >= DETECTION_THRESHOLD):
                         save_pictures() # TODO and generate vehicle_ID, photo_ID
-                        save(vehicle_ID, np.array(current_vehicle), photo_ID, hdf5_output_file, output_photo_IDs_csv)
+                        
+                        try: # to process and save vehicle image
+                            processed_vehicle_image = process_vehicle_image(vehicle_image)
+                            hdf5_output_file.create_dataset(vehicle_ID, data=processed_vehicle_image)
+                        except Exception as e:
+                            print("dataset " + vehicle_ID + " cannot be created in file: " + hdf5_output_file.name)
+                            #print(repr(e))
+                            raise e
+                        
+                        try: # to save photo_ID
+                            output_photo_IDs_csv.write(vehicle_ID + "," + photo_ID)
+                        except Exception as e:
+                            print("could not write " + vehicle_ID + " to csv file: " + output_photo_IDs_csv.name)
+                            #print(repr(e))
+                            raise e
                         current_vehicle = []
                         gap_count = 0
     
@@ -291,25 +303,6 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     output_photo_IDs_csv.close()
     output_lidar_signature_hdf5.close()
     
-        
-
-def save(vehicle_ID, vehicle_image, photo_ID, hdf5_output_file, output_photo_IDs_csv):
-    """ save vehicle_ID (str), photo_ID (str), vehicle_lidar_image (np array) in specified files"""        
-    
-    try: # to process and save vehicle image
-        processed_vehicle_image = process_vehicle_image(vehicle_image)
-        hdf5_output_file.create_dataset(vehicle_ID, data=processed_vehicle_image)
-    except Exception as e:
-        print("dataset " + vehicle_ID + " cannot be created in file: " + hdf5_output_file.name)
-        #print(repr(e))
-        raise e
-    
-    try: # to save photo_ID
-        output_photo_IDs_csv.write(vehicle_ID + "," + photo_ID)
-    except Exception as e:
-        print("could not write " + vehicle_ID + " to csv file: " + output_photo_IDs_csv.name)
-        #print(repr(e))
-        raise e
 
 if __name__ == "__main__":
     main()
