@@ -283,8 +283,12 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
     
     # while not reached end of lidar data in input_lidar_data_hdf5
     while(current_key != input_lidar_data_keys[-1] or current_index != len(current_key)-1):
+        lidar_data = np.array(input_lidar_data_hdf5.get(current_key)) # array
         
-        
+        for lidar_measurement in lidar_data:
+            if(vehicle_detected(lidar_measurement)):
+                
+                save(vehicle_ID, vehicle_image, photo_ID, hdf5_output_file, output_photo_IDs_csv)
         
 
     """
@@ -292,7 +296,6 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
         return vehicle_ID (unique), vehicle_image (numpy array), video_frames
             or if there is no more data, return None, None, None
     """
-    lidar_data = np.array(hdf5_file.get(k)) # array
     
     count = 0 # consecutive measurements with a vehicle detected
     current_vehicle =[]
@@ -348,8 +351,7 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
             current_vehicle.append(measurement)
 
 def save(vehicle_ID, vehicle_image, photo_ID, hdf5_output_file, output_photo_IDs_csv):
-    """ save vehicle_ID (str), photo_ID (str), vehicle_lidar_image in specified files"""        
-        
+    """ save vehicle_ID (str), photo_ID (str), vehicle_lidar_image (np array) in specified files"""        
         
         try: # to process and save vehicle image
             processed_vehicle_image = process_vehicle_image(vehicle_image)
