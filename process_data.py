@@ -270,6 +270,15 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
             photos of vehicles in output_photo_folder_path
     """
 
+    # TODO rewrite this
+    
+    # loop through everything normally, keeping track of all possible vehicles
+    # (therefore no need to access data between datasets)
+    for key in input_lidar_data_keys:
+        lidar_data = np.array(input_lidar_data_hdf5.get(key)) 
+        
+        for data_point in lidar_data:
+            
     
     # initialize variables
     current_key_index = 0       # index of current key in input_lidar_data_keys
