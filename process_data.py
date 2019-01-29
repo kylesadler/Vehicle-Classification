@@ -81,65 +81,7 @@ def vehicle_detected(a):
 
 
 def find_vehicle(hdf5_input_file, keys, video_files, start_time):
-    """
-        given: input_file, keys (sorted chronologically), start_time
-        return vehicle_ID (unique), vehicle_image (numpy array), video_frames
-            or if there is no more data, return None, None, None
-    """
-    lidar_data = np.array(hdf5_file.get(k)) # array
     
-    count = 0 # consecutive measurements with a vehicle detected
-    current_vehicle =[]
-    recording_vehicle = False
-    
-    # find vehicles
-    for time in range(len(lidar_data)):
-       
-        # data[time][position], measurement is a data capture at a specific time
-        # go through measurements identifying vehicles; if vehicle is found, process and add to list
-        
-        measurement = lidar_data[time]
-        
-        vehicle_present = vehicle_detected(measurement)
-        
-        # if there isn't a vehicle in the current frame and we are not recording a current vehicle, continue
-        if(not vehicle_present and not recording_vehicle): 
-            continue
-        
-        elif(vehicle_present and not recording_vehicle):
-            count+=1
-            
-            if(count > DETECTION_THRESHOLD):
-                
-                count = 0
-                
-                for i in range(DETECTION_THRESHOLD): # add previous points to vehicle
-                    current_vehicle.append(data[time - DETECTION_THRESHOLD + i])#
-                
-                recording_vehicle = True            
-            
-        
-        elif(not vehicle_present and recording_vehicle):
-            count+=1
-            
-            if(count > DETECTION_THRESHOLD):
-                
-                count = 0
-                
-                current_vehicle = current_vehicle[:len(current_vehicle)-DETECTION_THRESHOLD]
-                
-                # stop recording vehicle
-                
-                recording_vehicle = False    
-                
-                processed_vehicles.append(normalize_vehicle(current_vehicle))
-                current_vehicle = []
-            
-            
-            
-        if(recording_vehicle): # add data point to current vehicle
-            
-            current_vehicle.append(measurement)
         
     
 def process_vehicle_image(v):
@@ -263,7 +205,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     """                               """
     """                               """
     
-    # get list of all the video file paths
+    # get list of all the video file paths in order
     input_video_file_paths = get_video_files(video_folder_path)
     input_video_file_paths.sort()
     
@@ -280,7 +222,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     # open input hdf5 file -- stores compressed lidar data
     input_lidar_data_hdf5 = h5py.File(hdf5_file_path, 'r')
     input_lidar_data_keys = input_lidar_data_hdf5.keys()
-    input_lidar_data_keys.sort() # ensure that data is processed in order
+    input_lidar_data_keys.sort() # ensure that keys are processed in order
     
     # make output csv file -- (stores vehcile_ID, photo_ID)
     output_photo_IDs_csv = open(os.path.join(output_dir_path,hdf5_file_name[:-3]+"_vehicles.csv"), 'a')
@@ -337,16 +279,21 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
             # save image and video frames to hdf5_output_file
         # make sure that video matches lidar signal
     
+    # initialize variables
+    current_key = input_lidar_data_keys[0]
+    current_index = 0
     
     
-    vehicle_ID = True
-    
-    
-    while(vehicle_ID != None):
+    # while not reached end of lidar_data in input_lidar_data_hdf5
+    while(current_key != input_lidar_data_keys[-1] and current_index == len(current_key)-1):
         
         
         vehicle_ID, vehicle_image, video_frames = find_vehicle(input_lidar_data_hdf5, input_lidar_data_keys, video_files, start)
         
+        try:
+            vehicle_ID = str(vehicle_ID)
+        except: # when this fails, vehicle_ID == None and find_vehicles has stopped parsing
+            break
         
         # process vehicle image
         processed_vehicle_image = process_vehicle_image(vehicle_image)
@@ -358,16 +305,71 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
             raise
         
         try:
-            push_to_database(vehicle_ID, video_frames, csv_file)
+            csv_file.write(str(vehicle_ID)+",")
         except:
             print("could not write " + str(vehicle_ID) + " to database file.")
             raise
         
 
-
-def push_to_database(v_ID, video_frames, csv_file):
-    """ v_ID is int, video_frames is list """
-    csv_file.write(str(v_ID)+",")
+    """
+        given: input_file, keys (sorted chronologically), start_time
+        return vehicle_ID (unique), vehicle_image (numpy array), video_frames
+            or if there is no more data, return None, None, None
+    """
+    lidar_data = np.array(hdf5_file.get(k)) # array
+    
+    count = 0 # consecutive measurements with a vehicle detected
+    current_vehicle =[]
+    recording_vehicle = False
+    
+    # find vehicles
+    for time in range(len(lidar_data)):
+       
+        # data[time][position], measurement is a data capture at a specific time
+        # go through measurements identifying vehicles; if vehicle is found, process and add to list
+        
+        measurement = lidar_data[time]
+        
+        vehicle_present = vehicle_detected(measurement)
+        
+        # if there isn't a vehicle in the current frame and we are not recording a current vehicle, continue
+        if(not vehicle_present and not recording_vehicle): 
+            continue
+        
+        elif(vehicle_present and not recording_vehicle):
+            count+=1
+            
+            if(count > DETECTION_THRESHOLD):
+                
+                count = 0
+                
+                for i in range(DETECTION_THRESHOLD): # add previous points to vehicle
+                    current_vehicle.append(data[time - DETECTION_THRESHOLD + i])#
+                
+                recording_vehicle = True            
+            
+        
+        elif(not vehicle_present and recording_vehicle):
+            count+=1
+            
+            if(count > DETECTION_THRESHOLD):
+                
+                count = 0
+                
+                current_vehicle = current_vehicle[:len(current_vehicle)-DETECTION_THRESHOLD]
+                
+                # stop recording vehicle
+                
+                recording_vehicle = False    
+                
+                processed_vehicles.append(normalize_vehicle(current_vehicle))
+                current_vehicle = []
+            
+            
+            
+        if(recording_vehicle): # add data point to current vehicle
+            
+            current_vehicle.append(measurement)
 
 
 
