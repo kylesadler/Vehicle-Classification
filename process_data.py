@@ -227,13 +227,12 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     if not os.path.exists(output_photo_folder_path):
         os.makedirs(output_photo_folder_path)
     
+    
     """                               """
     """                               """
     """   process all the vehicles    """
     """                               """
-    """                               """
-    
-    """
+    """                               
         parse vehicles and store them in output_lidar_signature_hdf5
         
         given:
@@ -276,10 +275,12 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                     
                     # save everything
                     if(gap_count >= DETECTION_THRESHOLD):
-                        save_pictures() # TODO and generate vehicle_ID, photo_ID
+                        save_pictures() # TODO and generate photo_ID
+                        
+                        vehicle_ID = str(current_vehicle[0][-1]) # get the timestamp of first vehicle measurement
                         
                         try: # to process and save vehicle image
-                            processed_vehicle_image = process_vehicle_image(vehicle_image)
+                            processed_vehicle_image = process_vehicle_image(np.array(current_vehicle))
                             hdf5_output_file.create_dataset(vehicle_ID, data=processed_vehicle_image)
                         except Exception as e:
                             print("dataset " + vehicle_ID + " cannot be created in file: " + hdf5_output_file.name)
@@ -292,13 +293,19 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                             print("could not write " + vehicle_ID + " to csv file: " + output_photo_IDs_csv.name)
                             #print(repr(e))
                             raise e
+                        
                         current_vehicle = []
                         gap_count = 0
     
     
     
     
-    # close all the files
+    """                               """
+    """                               """
+    """      close all the files      """
+    """                               """
+    """                               """
+    
     output_lidar_signature_hdf5.close()
     output_photo_IDs_csv.close()
     output_lidar_signature_hdf5.close()
