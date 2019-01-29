@@ -272,32 +272,19 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
 
     
     # initialize variables
-    current_key = input_lidar_data_keys[0]  # current data chunk in input_lidar_data_hdf5
-    current_index = 0                       # current index in current chunk
+    current_key_index = 0       # index of current key in input_lidar_data_keys
+    current_video_index = 0     # index of current video in input_video_file_paths
+    current_key = input_lidar_data_keys[current_key_index]
+    current_video = input_video_file_paths[current_video_index]
+    
+    current_data_pointer = 0            # index of current pointer in current_key dataset
+    current_image_pointer = 0           # index of the current image in current_video
     
     
     # while not reached end of lidar data in input_lidar_data_hdf5
     while(current_key != input_lidar_data_keys[-1] or current_index != len(current_key)-1):
         
         
-        vehicle_ID, vehicle_image, video_frames = find_vehicle(input_lidar_data_hdf5, input_lidar_data_keys, video_files, start)
-        
-        
-        """ need vehicle_ID (str), photo_ID (str), vehicle_image """        
-        
-        
-        try: # to process and save vehicle image
-            processed_vehicle_image = process_vehicle_image(vehicle_image)
-            hdf5_output_file.create_dataset(vehicle_ID, data=processed_vehicle_image)
-        except Exception as e:
-            print("dataset " + vehicle_ID + " cannot be created in file: "+hdf5_output_file.name)
-            print(repr(e))
-        
-        try: # to save photo_ID
-            output_photo_IDs_csv.write(vehicle_ID + "," + photo_ID)
-        except Exception as e:
-            print("could not write " + vehicle_ID + " to csv file: " + output_photo_IDs_csv.name)
-            print(repr(e))
         
 
     """
@@ -360,7 +347,24 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
             
             current_vehicle.append(measurement)
 
-
+def save(vehicle_ID, vehicle_image, photo_ID, hdf5_output_file, output_photo_IDs_csv):
+    """ save vehicle_ID (str), photo_ID (str), vehicle_lidar_image in specified files"""        
+        
+        
+        try: # to process and save vehicle image
+            processed_vehicle_image = process_vehicle_image(vehicle_image)
+            hdf5_output_file.create_dataset(vehicle_ID, data=processed_vehicle_image)
+        except Exception as e:
+            print("dataset " + vehicle_ID + " cannot be created in file: " + hdf5_output_file.name)
+            #print(repr(e))
+            raise e
+        
+        try: # to save photo_ID
+            output_photo_IDs_csv.write(vehicle_ID + "," + photo_ID)
+        except Exception as e:
+            print("could not write " + vehicle_ID + " to csv file: " + output_photo_IDs_csv.name)
+            #print(repr(e))
+            raise e
 
 if __name__ == "__main__":
     main()
