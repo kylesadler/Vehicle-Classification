@@ -267,9 +267,8 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
     # TODO rewrite this
     
     
-    count = 0 # consecutive measurements with a vehicle detected
+    gap_count = 0 # consecutive measurements between vehicle detections
     current_vehicle = []
-    recording_vehicle = False
     
     
     # loop through everything normally, keeping track of all possible vehicles
@@ -278,21 +277,21 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
         
         for lidar_measurement in np.array(input_lidar_data_hdf5.get(key)):
             
-            vehicle_present = vehicle_detected(lidar_measurement)
-            
-            # if there isn't a vehicle in the current frame and we are not recording a current vehicle, continue
-            if(vehicle_present):
-                
-                
-                continue
+            # if there is a vehicle in the current frame, save it to current_vehicle
+            if(vehicle_detected(lidar_measurement)):
+                current_vehicle.add(lidar_measurement)
             
             else:
-                if(len(current_vehicle) < DETECTION_THRESHOLD): 
+                if(len(current_vehicle) == 0):
+                    continue 
+                elif(len(current_vehicle) < DETECTION_THRESHOLD): 
                     current_vehicle = []
-                
+                else: # check for gaps
+                    gap_count += 1
                     
-                    
-                save(vehicle_ID, vehicle_image, photo_ID, hdf5_output_file, output_photo_IDs_csv)
+                    if(gap_count >= DETECTION_THRESHOLD):
+                        save(vehicle_ID, vehicle_image, photo_ID, hdf5_output_file, output_photo_IDs_csv)
+                        gap_count = 0
 
     
             
