@@ -52,7 +52,7 @@ from Tools.scripts.finddiv import process
 
 WORKING_DIR = "data" # where all the data is stored, if in same folder as this script, WORKING_DIR = "."
 VID_FILE_EXTENSION = ".MTS"
-
+DETECTION_THRESHOLD = 10
 
 
 
@@ -281,43 +281,15 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
             vehicle_present = vehicle_detected(lidar_measurement)
             
             # if there isn't a vehicle in the current frame and we are not recording a current vehicle, continue
-            if(not vehicle_present and not recording_vehicle): 
+            if(vehicle_present):
+                
+                
                 continue
             
-            elif(vehicle_present and not recording_vehicle):
-                count+=1
-                
-                if(count > DETECTION_THRESHOLD):
-                    
-                    count = 0
-                    
-                    for i in range(DETECTION_THRESHOLD): # add previous points to vehicle
-                        current_vehicle.append(data[time - DETECTION_THRESHOLD + i])#
-                    
-                    recording_vehicle = True            
-                
-            
-            elif(not vehicle_present and recording_vehicle):
-                count+=1
-                
-                if(count > DETECTION_THRESHOLD):
-                    
-                    count = 0
-                    
-                    current_vehicle = current_vehicle[:len(current_vehicle)-DETECTION_THRESHOLD]
-                    
-                    # stop recording vehicle
-                    
-                    recording_vehicle = False    
-                    
-                    processed_vehicles.append(normalize_vehicle(current_vehicle))
+            else:
+                if(len(current_vehicle) < DETECTION_THRESHOLD): 
                     current_vehicle = []
                 
-                
-                
-            if(recording_vehicle): # add data point to current vehicle
-                
-                current_vehicle.append(measurement)
                     
                     
                 save(vehicle_ID, vehicle_image, photo_ID, hdf5_output_file, output_photo_IDs_csv)
