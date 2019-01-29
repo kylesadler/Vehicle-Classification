@@ -272,36 +272,18 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
 
     # TODO rewrite this
     
-    # loop through everything normally, keeping track of all possible vehicles
-    # (therefore no need to access data between datasets)
-    for key in input_lidar_data_keys:
-        lidar_data = np.array(input_lidar_data_hdf5.get(key)) 
-        
-        for data_point in lidar_data:
-            
-    
-    # initialize variables
-    current_key_index = 0       # index of current key in input_lidar_data_keys
-    current_video_index = 0     # index of current video in input_video_file_paths
-    current_key = input_lidar_data_keys[current_key_index]
-    current_video = input_video_file_paths[current_video_index]
-    
-    current_data_pointer = 0            # index of current pointer in current_key dataset
-    current_image_pointer = 0           # index of the current image in current_video
     
     count = 0 # consecutive measurements with a vehicle detected
     current_vehicle =[]
     recording_vehicle = False
     
+    
+    # loop through everything normally, keeping track of all possible vehicles
+    # (therefore no need to access data between datasets)
+    for key in input_lidar_data_keys:
+        lidar_data = np.array(input_lidar_data_hdf5.get(key)) 
         
-    # while not reached end of lidar data in input_lidar_data_hdf5
-    while(current_key != input_lidar_data_keys[-1] or current_index != len(current_key)-1):
-        lidar_data = np.array(input_lidar_data_hdf5.get(current_key)) # array
-        
-        for time in range(len(lidar_data)):
-            
-            # lidar_data[time][position] is a data capture at a specific time and position
-            lidar_measurement = lidar_data[time]
+        for lidar_measurement in lidar_data:
             
             vehicle_present= vehicle_detected(lidar_measurement)
             
@@ -346,8 +328,9 @@ def parse_vehicles(input_lidar_data_hdf5, input_lidar_data_keys, input_video_fil
                     
                     
                 save(vehicle_ID, vehicle_image, photo_ID, hdf5_output_file, output_photo_IDs_csv)
-        
 
+    
+            
     """
         given: input_file, keys (sorted chronologically), start_time
         return vehicle_ID (unique), vehicle_image (numpy array), video_frames
