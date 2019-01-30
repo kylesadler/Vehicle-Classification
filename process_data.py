@@ -268,24 +268,24 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                     
                     # save everything
                     if(gap_count >= DETECTION_THRESHOLD):
-                        vehicle_ID = str(current_vehicle[0][-1]) # get the timestamp of first vehicle measurement
+                        vehicle_ID = current_vehicle[0][-1] # get the timestamp of first vehicle measurement
                         
-                         # TODO 
-                        save_pictures(input_video_file_paths, output_photo_folder_path, current_vehicle[0][-1])
+                        # TODO 
+                        save_pictures(input_video_file_paths, output_photo_folder_path, vehicle_ID)
                         
                         
                         try: # to process and save vehicle image
                             processed_vehicle_image = process_vehicle_image(np.array(current_vehicle))
-                            hdf5_output_file.create_dataset(vehicle_ID, data=processed_vehicle_image)
+                            hdf5_output_file.create_dataset(str(vehicle_ID), data=processed_vehicle_image)
                         except Exception as e:
-                            print("dataset " + vehicle_ID + " cannot be created in file: " + hdf5_output_file.name)
+                            print("dataset " + str(vehicle_ID) + " cannot be created in file: " + hdf5_output_file.name)
                             #print(repr(e))
                             raise e
                         
                         try: # to save photo_ID
-                            output_database_csv.write(vehicle_ID)
+                            output_database_csv.write(str(vehicle_ID)+", -1")
                         except Exception as e:
-                            print("could not write " + vehicle_ID + " to csv file: " + output_database_csv.name)
+                            print("could not write '" + str(vehicle_ID)+", -1' to csv file: " + output_database_csv.name)
                             #print(repr(e))
                             raise e
                         
@@ -311,10 +311,10 @@ def save_pictures(input_video_file_paths, output_photo_folder_path, timestamp):
     
     for i in range(len(images)):
         image = images[i]
-        image_file_name = os.path.join(output_photo_folder_path, str(timestamp) + "_" + str(i) + IMAGE_SAVE_EXTENSION)
+        image_file_path = os.path.join(output_photo_folder_path, str(timestamp) + "_" + str(i))
         try:
             # save photo
-            cv2.imwrite(image_file_name, image) 
+            cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, image) 
         except:
             print("could not save " + str(timestamp) + "_" + str(i) + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
     
