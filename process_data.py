@@ -31,7 +31,7 @@ This module:
         | --> 2018-10-02-1437_vehicles.h5 (vehicle_ID, processed lidar)
         | --> 2018-10-02-1437_vehicles.csv (vehicle_ID)
         | --> 2018-10-02-1437_photos
-            | --> 20181002143759_0.png (x photos for each vehicle_ID)
+            | --> 20181002143759_0.png (FRAMES_PER_VEHICLE photos for each vehicle_ID)
             | --> 20181002143759_1.png
             | --> 20181002143759_2.png
             | --> 20181002143759_3.png
@@ -55,7 +55,8 @@ import cv2
 WORKING_DIR = "." # where all the data is stored, if in same folder as this script, WORKING_DIR = "."
 VID_FILE_EXTENSION = ".MTS"
 DETECTION_THRESHOLD = 10
-
+IMAGE_SAVE_EXTENSION = ".jpg"
+FRAMES_PER_VEHICLE = 10
 
 
 
@@ -306,13 +307,20 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     
 def save_pictures(input_video_file_paths, output_photo_folder_path, timestamp):
     """ return unique photo_ID """
-    images = get_photos(timestamp)
+    images = get_photos(input_video_file_paths, timestamp, FRAMES_PER_VEHICLE)
     
     for i in range(len(images)):
         image = images[i]
+        image_file_name = os.path.join(output_photo_folder_path, str(timestamp) + "_" + str(i) + IMAGE_SAVE_EXTENSION)
         try:
-            # save photo (photo)
-            cv2.imwrite(str(timestamp) + " " + str(i), image) 
+            # save photo
+            cv2.imwrite(image_file_name, image) 
+        except:
+            print("could not save " + str(timestamp) + "_" + str(i) + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
+    
+get_photos(input_video_file_paths, timestamp, num_pics):
+    """ return num_pics images from input_video_file_paths starting at timestamp """
+    pass
     
 
 if __name__ == "__main__":
