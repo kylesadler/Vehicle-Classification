@@ -50,6 +50,7 @@ import numpy as np
 import h5py
 from datetime import datetime
 import os
+import cv2
 
 WORKING_DIR = "." # where all the data is stored, if in same folder as this script, WORKING_DIR = "."
 VID_FILE_EXTENSION = ".MTS"
@@ -305,10 +306,13 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     
 def save_pictures(input_video_file_paths, output_photo_folder_path, timestamp):
     """ return unique photo_ID """
-    photos = get_photos(timestamp)
+    images = get_photos(timestamp)
     
-    for photo in photos:
-        
+    for i in range(len(images)):
+        image = images[i]
+        try:
+            # save photo (photo)
+            cv2.imwrite(str(timestamp) + " " + str(i), image) 
     
 
 if __name__ == "__main__":
