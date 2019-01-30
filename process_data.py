@@ -42,15 +42,16 @@ This module:
             | --> 00000001_3.png
     
     
+    upload photo_ID to database, groundtruth interface gets photo stored locally using photo_ID
+    
 """
 
 import numpy as np
 import h5py
 from datetime import datetime
 import os
-from Tools.scripts.finddiv import process
 
-WORKING_DIR = "data" # where all the data is stored, if in same folder as this script, WORKING_DIR = "."
+WORKING_DIR = "." # where all the data is stored, if in same folder as this script, WORKING_DIR = "."
 VID_FILE_EXTENSION = ".MTS"
 DETECTION_THRESHOLD = 10
 
@@ -275,9 +276,11 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                     
                     # save everything
                     if(gap_count >= DETECTION_THRESHOLD):
-                        save_pictures() # TODO and generate photo_ID
-                        
                         vehicle_ID = str(current_vehicle[0][-1]) # get the timestamp of first vehicle measurement
+                        
+                         # TODO and generate photo_ID
+                        photo_ID = save_pictures(input_video_file_paths, output_photo_folder_path, current_vehicle[0][-1])
+                        
                         
                         try: # to process and save vehicle image
                             processed_vehicle_image = process_vehicle_image(np.array(current_vehicle))
@@ -310,6 +313,9 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     output_photo_IDs_csv.close()
     output_lidar_signature_hdf5.close()
     
+def save_pictures(input_video_file_paths, output_photo_folder_path, time_stamp):
+    """ return unique photo_ID """
+    pass
 
 if __name__ == "__main__":
     main()
