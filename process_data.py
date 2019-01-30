@@ -29,20 +29,20 @@ This module:
     output:
     | --> 2018-10-02 PROCESSED/
         | --> 2018-10-02-1437_vehicles.h5 (vehicle_ID, processed lidar)
-        | --> 2018-10-02-1437_vehicles.csv (vehicle_ID, photo_ID)
+        | --> 2018-10-02-1437_vehicles.csv (vehicle_ID)
         | --> 2018-10-02-1437_photos
-            | --> 00000000_0.png (x photos for each photo_ID)
-            | --> 00000000_1.png
-            | --> 00000000_2.png
-            | --> 00000000_3.png
+            | --> 20181002143759_0.png (x photos for each vehicle_ID)
+            | --> 20181002143759_1.png
+            | --> 20181002143759_2.png
+            | --> 20181002143759_3.png
             |       ...
-            | --> 00000001_0.png
-            | --> 00000001_1.png
-            | --> 00000001_2.png
-            | --> 00000001_3.png
+            | --> YYYYMMDDHHmmss_0.png
+            | --> YYYYMMDDHHmmss_1.png
+            | --> YYYYMMDDHHmmss_2.png
+            | --> YYYYMMDDHHmmss_3.png
     
     
-    upload photo_ID to database, groundtruth interface gets photo stored locally using photo_ID
+    upload vehicle_ID to database, groundtruth interface gets photos stored locally of vehicle_ID
     
 """
 
@@ -181,16 +181,6 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     """ given paths to corresponding hdf5 file and video folder
         hdf5_file_path = WORKING_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMM.h5
         video_folder_path = WORKING_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMM_video
-    
-         | --> 2018-10-02-1437.h5
-         | --> 2018-10-02-1437_video/ (corresponding movie for each capture)
-             | --> 0000.mov
-             | --> 0001.mov
-             | --> 0002.mov
-        
-    output:
-    | --> 2018-10-02 PROCESSED/
-        | --> 2018-10-02-1437_vehicles.h5 (vehicle_ID, video_frames, processed lidar image tuples)
     """
     
     
@@ -219,9 +209,9 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     input_lidar_data_keys = input_lidar_data_hdf5.keys()
     input_lidar_data_keys.sort() # ensure that keys are processed in order
     
-    # make output csv file -- (stores vehcile_ID, photo_ID)
-    output_photo_IDs_csv = open(os.path.join(output_dir_path,hdf5_file_name[:-3]+"_vehicles.csv"), 'a')
-    output_photo_IDs_csv.write("vehicle_ID,photo_ID")
+    # make output csv file -- (stores vehcile_ID, label)
+    output_database_csv = open(os.path.join(output_dir_path,hdf5_file_name[:-3]+"_vehicles.csv"), 'a')
+    output_database_csv.write("vehicle_ID,label)
     
     # make output folder for photos
     output_photo_folder_path = os.path.join(output_dir_path,hdf5_file_name[:-3]+"photos")
@@ -241,13 +231,13 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
             input_lidar_data_hdf5
             input_lidar_data_keys      (sorted chronologically)
             input_video_file_paths     (sorted chronologically)
-            output_photo_IDs_csv        
+            output_database_csv        
             output_photo_folder_path
             output_lidar_signature_hdf5
         
         output:
             a populated hdf5_output_file with (vehicle_ID, processed lidar images)
-            a populated output_photo_IDs_csv with (vehicle_ID, photo_ID)
+            a populated output_database_csv with (vehicle_ID,label)
             photos of vehicles in output_photo_folder_path
     """
 
@@ -278,8 +268,8 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                     if(gap_count >= DETECTION_THRESHOLD):
                         vehicle_ID = str(current_vehicle[0][-1]) # get the timestamp of first vehicle measurement
                         
-                         # TODO and generate photo_ID
-                        photo_ID = save_pictures(input_video_file_paths, output_photo_folder_path, current_vehicle[0][-1])
+                         # TODO 
+                        save_pictures(input_video_file_paths, output_photo_folder_path, current_vehicle[0][-1])
                         
                         
                         try: # to process and save vehicle image
@@ -291,9 +281,9 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                             raise e
                         
                         try: # to save photo_ID
-                            output_photo_IDs_csv.write(vehicle_ID + "," + photo_ID)
+                            output_database_csv.write(vehicle_ID)
                         except Exception as e:
-                            print("could not write " + vehicle_ID + " to csv file: " + output_photo_IDs_csv.name)
+                            print("could not write " + vehicle_ID + " to csv file: " + output_database_csv.name)
                             #print(repr(e))
                             raise e
                         
@@ -310,12 +300,16 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     """                               """
     
     output_lidar_signature_hdf5.close()
-    output_photo_IDs_csv.close()
+    output_database_csv.close()
     output_lidar_signature_hdf5.close()
     
-def save_pictures(input_video_file_paths, output_photo_folder_path, time_stamp):
+def save_pictures(input_video_file_paths, output_photo_folder_path, timestamp):
     """ return unique photo_ID """
-    pass
+    photos = get_photos(timestamp)
+    
+    for photo in photos:
+        
+    
 
 if __name__ == "__main__":
     main()
