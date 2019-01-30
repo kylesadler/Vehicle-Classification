@@ -80,7 +80,7 @@ def vehicle_detected(a):
 
 
     
-def process_vehicle_image(v):
+def process_vehicle_signature(v):
     """ given a numpy array of a vehicle image, process it """
     # TODO crop vertically
     return normalize_vehicle(v)
@@ -268,15 +268,15 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                     
                     # save everything
                     if(gap_count >= DETECTION_THRESHOLD):
+                        
                         vehicle_ID = current_vehicle[0][-1] # get the timestamp of first vehicle measurement
                         
-                        # TODO 
                         save_pictures(input_video_file_paths, output_photo_folder_path, vehicle_ID)
                         
                         
                         try: # to process and save vehicle image
-                            processed_vehicle_image = process_vehicle_image(np.array(current_vehicle))
-                            hdf5_output_file.create_dataset(str(vehicle_ID), data=processed_vehicle_image)
+                            processed_vehicle_signature = process_vehicle_signature(np.array(current_vehicle))
+                            hdf5_output_file.create_dataset(str(vehicle_ID), data=processed_vehicle_signature)
                         except Exception as e:
                             print("dataset " + str(vehicle_ID) + " cannot be created in file: " + hdf5_output_file.name)
                             #print(repr(e))
