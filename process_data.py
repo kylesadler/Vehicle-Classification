@@ -203,7 +203,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     if not os.path.exists(output_dir_path):
         os.makedirs(output_dir_path)
     
-    # make output hdf5 file -- stores (vechicle_ID, lidar_signature) 
+    # make output hdf5 file -- stores (vehicle_ID, lidar_signature) 
     output_lidar_signature_hdf5 = h5py.File(os.path.join(output_dir_path, hdf5_file_name[:-3]+"_vehicles.h5"), 'a')
     
     # open input hdf5 file -- stores compressed lidar data
@@ -266,15 +266,16 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                 else:
                     gap_count += 1
                     
-                    # save everything
+                    # end vehicle and save everything
                     if(gap_count >= DETECTION_THRESHOLD):
                         
                         vehicle_ID = current_vehicle_signature[0][-1] # get the timestamp of first vehicle measurement
                         
+                        # save photos of vehicle to output_photo_folder_path
                         save_vehical_frames(input_video_file_paths, output_photo_folder_path, vehicle_ID)
                         
                         
-                        try: # to process and save vehicle image
+                        try: # to process and save current_vehicle_signature
                             processed_vehicle_signature = process_vehicle_signature(np.array(current_vehicle_signature))
                             hdf5_output_file.create_dataset(str(vehicle_ID), data=processed_vehicle_signature)
                         except Exception as e:
@@ -282,7 +283,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                             #print(repr(e))
                             raise e
                         
-                        try: # to save photo_ID
+                        try: # to save vehicle_ID,vehicle label (timestamp of vehicle) to output_database_csv
                             output_database_csv.write(str(vehicle_ID)+", -1")
                         except Exception as e:
                             print("could not write '" + str(vehicle_ID)+", -1' to csv file: " + output_database_csv.name)
@@ -318,7 +319,7 @@ def save_vehical_frames(input_video_file_paths, output_photo_folder_path, timest
         except:
             print("could not save " + str(timestamp) + "_" + str(i) + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
     
-get_vehicle_photos(input_video_file_paths, timestamp, num_pics):
+def get_vehicle_photos(input_video_file_paths, timestamp, num_pics):
     """ return num_pics vehicle_photos from input_video_file_paths starting at timestamp """
     pass
     
