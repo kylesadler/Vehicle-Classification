@@ -320,8 +320,13 @@ def save_vehical_frames(input_video_file_paths, output_photo_folder_path, timest
             print("could not save " + str(timestamp) + "_" + str(i) + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
     
 def get_vehicle_photos(input_video_file_paths, timestamp, num_pics):
-    """ return num_pics vehicle_photos from input_video_file_paths starting at timestamp """
-    pass
+    """ return num_pics vehicle_photos from input_video_file_paths around timestamp """
+    # convert timestamp to time relative to the video
+    # use opencv to get the length of each video
+    # open video with greatest time before timestamp 
+    # use opencv to get the timestamp of each frame CAP_PROP_POS_MSEC 
+    # loop through frames and find num_pics frames around timestamp
+    # return frames as numpy arrays
     
 
 if __name__ == "__main__":
