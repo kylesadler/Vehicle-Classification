@@ -245,7 +245,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
 
     
     gap_count = 0 # consecutive measurements between vehicle detections
-    current_vehicle = []
+    current_vehicle_signature = []
     
     
     # loop through all keys
@@ -254,28 +254,28 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
         # loop through all lidar_measurement in dataset with specified key
         for lidar_measurement in np.array(input_lidar_data_hdf5.get(key)):
             
-            # if there is a vehicle in the current frame, save it to current_vehicle
+            # if there is a vehicle in the current frame, save it to current_vehicle_signature
             if(vehicle_detected(lidar_measurement)):
-                current_vehicle.add(lidar_measurement)
+                current_vehicle_signature.add(lidar_measurement)
                 gap_count = 0
             else:
-                if(len(current_vehicle) == 0):
+                if(len(current_vehicle_signature) == 0):
                     continue 
-                elif(len(current_vehicle) < DETECTION_THRESHOLD): 
-                    current_vehicle = []
+                elif(len(current_vehicle_signature) < DETECTION_THRESHOLD): 
+                    current_vehicle_signature = []
                 else:
                     gap_count += 1
                     
                     # save everything
                     if(gap_count >= DETECTION_THRESHOLD):
                         
-                        vehicle_ID = current_vehicle[0][-1] # get the timestamp of first vehicle measurement
+                        vehicle_ID = current_vehicle_signature[0][-1] # get the timestamp of first vehicle measurement
                         
                         save_pictures(input_video_file_paths, output_photo_folder_path, vehicle_ID)
                         
                         
                         try: # to process and save vehicle image
-                            processed_vehicle_signature = process_vehicle_signature(np.array(current_vehicle))
+                            processed_vehicle_signature = process_vehicle_signature(np.array(current_vehicle_signature))
                             hdf5_output_file.create_dataset(str(vehicle_ID), data=processed_vehicle_signature)
                         except Exception as e:
                             print("dataset " + str(vehicle_ID) + " cannot be created in file: " + hdf5_output_file.name)
@@ -289,7 +289,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                             #print(repr(e))
                             raise e
                         
-                        current_vehicle = []
+                        current_vehicle_signature = []
                         gap_count = 0
     
     
