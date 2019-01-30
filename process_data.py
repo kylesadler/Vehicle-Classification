@@ -271,7 +271,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                         
                         vehicle_ID = current_vehicle_signature[0][-1] # get the timestamp of first vehicle measurement
                         
-                        save_pictures(input_video_file_paths, output_photo_folder_path, vehicle_ID)
+                        save_vehical_frames(input_video_file_paths, output_photo_folder_path, vehicle_ID)
                         
                         
                         try: # to process and save vehicle image
@@ -305,21 +305,21 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     output_database_csv.close()
     output_lidar_signature_hdf5.close()
     
-def save_pictures(input_video_file_paths, output_photo_folder_path, timestamp):
+def save_vehical_frames(input_video_file_paths, output_photo_folder_path, timestamp):
     """ return unique photo_ID """
-    images = get_photos(input_video_file_paths, timestamp, FRAMES_PER_VEHICLE)
+    vehicle_photos = get_vehicle_photos(input_video_file_paths, timestamp, FRAMES_PER_VEHICLE)
     
-    for i in range(len(images)):
-        image = images[i]
+    for i in range(len(vehicle_photos)):
+        vehicle_photo = vehicle_photos[i]
         image_file_path = os.path.join(output_photo_folder_path, str(timestamp) + "_" + str(i))
         try:
             # save photo
-            cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, image) 
+            cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, vehicle_photo) 
         except:
             print("could not save " + str(timestamp) + "_" + str(i) + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
     
-get_photos(input_video_file_paths, timestamp, num_pics):
-    """ return num_pics images from input_video_file_paths starting at timestamp """
+get_vehicle_photos(input_video_file_paths, timestamp, num_pics):
+    """ return num_pics vehicle_photos from input_video_file_paths starting at timestamp """
     pass
     
 
