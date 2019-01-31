@@ -313,8 +313,32 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     
     
     csv_file_again = open(output_database_csv, "r")
-    
     line = csv_file_again.readline()
+    
+    # go through all the videos searching for vehicles
+    for video_file in input_video_file_paths:
+        
+        vidcap = cv2.VideoCapture(video_file_path) # open video
+        
+        # go to the correct time in video (time in ms)
+        time = vidcap.get(cv2.CV_CAP_PROP_POS_MSEC)
+        
+        # loop through frames and find num_pics frames around timestamp
+        success, image = vidcap.read() # TODO account for end of video vehicles
+        count = 0
+        vidcap.set(cv2.CV_CAP_PROP_POS_MSEC, time)
+        
+        # loop through frames and find num_pics frames around timestamp
+    success, image = vidcap.read() # TODO account for end of video vehicles
+    count = 0
+    while(success and count < num_pics):
+      vehicle_photos.append(image)  
+      success, image = vidcap.read()
+      count += 1
+      
+    vidcap.release()
+        
+    
     # go through all timestamps and save photos
     while(line != ""):
         line = csv_file_again.readline()
