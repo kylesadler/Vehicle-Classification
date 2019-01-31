@@ -83,6 +83,7 @@ def vehicle_detected(a):
 def process_vehicle_signature(v):
     """ given a numpy array of a vehicle image, process it """
     # TODO crop vertically
+    # TODO slice timestamp off of end of each row (useless info) 
     return normalize_vehicle(v)
     
 def is_hdf5_file(file):
@@ -248,7 +249,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     current_vehicle_signature = []
     
     
-    # loop through all keys
+    # loop through all keys, save timestamps in csv, save lidar signatures in hdf5
     for key in input_lidar_data_keys:
         
         # loop through all lidar_measurement in dataset with specified key
@@ -266,14 +267,10 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                 else:
                     gap_count += 1
                     
-                    # end vehicle and save everything
+                    # end vehicle and save everything but photos
                     if(gap_count >= DETECTION_THRESHOLD):
                         
                         vehicle_ID = current_vehicle_signature[0][-1] # get the timestamp of first vehicle measurement
-                        
-                        # save photos of vehicle to output_photo_folder_path
-                        save_vehical_frames(input_video_file_paths, output_photo_folder_path, vehicle_ID)
-                        
                         
                         try: # to process and save current_vehicle_signature
                             processed_vehicle_signature = process_vehicle_signature(np.array(current_vehicle_signature))
@@ -302,9 +299,22 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     """                               """
     """                               """
     
-    output_lidar_signature_hdf5.close()
+    input_lidar_data_hdf5.close()
     output_database_csv.close()
     output_lidar_signature_hdf5.close()
+    
+    f = open(output_database_csv, "r")
+    
+    line = f.readline()
+    # go through all timestamps and save photos
+    while(line != ""):
+        line = f.readline()
+        timestamp = line.split(",")[0]      # string
+        
+    
+        # save photos of vehicle to output_photo_folder_path
+        save_vehical_frames(input_video_file_paths, output_photo_folder_path, timestamp)
+                        
     
 def save_vehical_frames(input_video_file_paths, output_photo_folder_path, timestamp):
     """ return unique photo_ID """
@@ -321,16 +331,18 @@ def save_vehical_frames(input_video_file_paths, output_photo_folder_path, timest
     
 def get_vehicle_photos(input_video_file_paths, timestamp, num_pics):
     """ return num_pics vehicle_photos from input_video_file_paths around timestamp """
-    # convert timestamp to time relative to the video
-    # use opencv to get the length of each video
-   
-    # return frames as numpy arrays
     
     # initialize photo list
     vehicle_photos = []
     
+    
+    
     # open video with greatest time before timestamp 
     video_file_path = 
+    
+    # convert timestamp to time relative to the video
+    time = 
+    
     
     # open correct video
     vidcap = cv2.VideoCapture(video_file_path)
@@ -339,7 +351,7 @@ def get_vehicle_photos(input_video_file_paths, timestamp, num_pics):
     vidcap.set(cv2.CV_CAP_PROP_POS_MSEC, time)
     
     # loop through frames and find num_pics frames around timestamp
-    success, image = vidcap.read()
+    success, image = vidcap.read() # TODO account for end of video vehicles
     count = 0
     while(success and count < num_pics):
       vehicle_photos.append(image)  
