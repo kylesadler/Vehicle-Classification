@@ -323,26 +323,32 @@ def get_vehicle_photos(input_video_file_paths, timestamp, num_pics):
     """ return num_pics vehicle_photos from input_video_file_paths around timestamp """
     # convert timestamp to time relative to the video
     # use opencv to get the length of each video
-    # open video with greatest time before timestamp 
-    # use opencv to get the timestamp of each frame CAP_PROP_POS_MSEC 
-    # loop through frames and find num_pics frames around timestamp
+   
     # return frames as numpy arrays
+    
+    # initialize photo list
     vehicle_photos = []
     
+    # open video with greatest time before timestamp 
+    video_file_path = 
     
-    
+    # open correct video
     vidcap = cv2.VideoCapture(video_file_path)
-    vidcap.get(cv2.CV_CAP_PROP_POS_MSEC) # get the ms time in video
-    vidcap.set(cv2.CV_CAP_PROP_POS_MSEC, time) # set the ms time in video
+    
+    # go to the correct time in video (time in ms)
+    vidcap.set(cv2.CV_CAP_PROP_POS_MSEC, time)
+    
+    # loop through frames and find num_pics frames around timestamp
     success, image = vidcap.read()
     count = 0
-    while success:
-      cv2.imwrite("frame%d.jpg" % count, image)     # save frame as JPEG file      
-      success,image = vidcap.read()
-      print('Read a new frame: ', success)
+    while(success and count < num_pics):
+      vehicle_photos.append(image)  
+      success, image = vidcap.read()
       count += 1
       
     vidcap.release()
+    
+    return vehicle_photos
 
 if __name__ == "__main__":
     main()
