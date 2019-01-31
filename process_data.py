@@ -183,7 +183,7 @@ def process_folder(folder):
         
 def process_files(hdf5_file_path, video_folder_path, output_dir):
     """ 
-        SORRY FOR THE LONG FUNCTION
+        SORRY FOR THE LONG FUNCTION, didn't want to copy lots of variables to sub functions
     
         given paths to corresponding hdf5 file and video folder
         hdf5_file_path = WORKING_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMM.h5
@@ -316,27 +316,18 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     if not os.path.exists(output_photo_folder_path):
         os.makedirs(output_photo_folder_path)
     
-    
-    
-    # go through all timestamps and save photos
-    line = csv_file_again.readline()
-    timestamp = line.split(",")[0]      # string
-    
-
-    # save photos of vehicle to output_photo_folder_path
-    save_vehical_frames(input_video_file_paths, output_photo_folder_path, timestamp)
-
+    header_line = csv_file_again.readline() # throw away line
     
     csv_file_again = open(output_database_csv, "r")
     line = csv_file_again.readline()
     end_time_of_last_vid = 
     frames_to_capture = 0
+    next_vehicle_timestamp = csv_file_again.readline().split(",")[0]      # string
     
     # go through all the videos searching for vehicles
     for video_path in input_video_file_paths:
         
-        vidcap = cv2.VideoCapture(video_path) # open video
-        
+        vidcap = cv2.VideoCapture(video_path) # open video and read first image
         success, image = vidcap.read()
         
         while(success): # loop through all frames in the video
@@ -347,6 +338,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
             
             if(time): # if there is a vehicle at this time
                 frames_to_capture = FRAMES_PER_VEHICLE
+                next_vehicle_timestamp = csv_file_again.readline().split(",")[0]
                 
             if(frames_to_capture > 0):
                 
@@ -367,24 +359,5 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
 
 if __name__ == "__main__":
     main()
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     
