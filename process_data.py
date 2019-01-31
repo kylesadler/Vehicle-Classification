@@ -213,7 +213,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     
     # make output csv file -- (stores vehcile_ID, label)
     output_database_csv = open(os.path.join(output_dir_path,hdf5_file_name[:-3]+"_vehicles.csv"), 'a')
-    output_database_csv.write("vehicle_ID,label)
+    output_database_csv.write("vehicle_ID,label")
     
     # make output folder for photos
     output_photo_folder_path = os.path.join(output_dir_path,hdf5_file_name[:-3]+"photos")
