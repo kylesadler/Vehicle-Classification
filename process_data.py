@@ -193,11 +193,6 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     """                               """
     """                               """
     
-    # get list of all the video file paths in order
-    input_video_file_paths = get_video_files(video_folder_path)
-    input_video_file_paths.sort()
-    
-    
     # make output_dir_path if it doesn't exist
     head, hdf5_file_name = os.path.split(hdf5_file_path)
     output_dir_path = os.path.join(output_dir, hdf5_file_name[:10] + " PROCESSED")
@@ -216,15 +211,10 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     output_database_csv = open(os.path.join(output_dir_path,hdf5_file_name[:-3]+"_vehicles.csv"), 'a')
     output_database_csv.write("vehicle_ID,label")
     
-    # make output folder for photos
-    output_photo_folder_path = os.path.join(output_dir_path,hdf5_file_name[:-3]+"photos")
-    if not os.path.exists(output_photo_folder_path):
-        os.makedirs(output_photo_folder_path)
-    
     
     """                               """
     """                               """
-    """   process all the vehicles    """
+    """  process csv and hdf5 files   """
     """                               """
     """                               
         parse vehicles and store them in output_lidar_signature_hdf5
@@ -303,12 +293,31 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     output_database_csv.close()
     output_lidar_signature_hdf5.close()
     
-    f = open(output_database_csv, "r")
     
-    line = f.readline()
+    
+    """                               """
+    """                               """
+    """      save all the photos      """
+    """                               """
+    """                               """
+    
+    
+    # get list of all the video file paths in order
+    input_video_file_paths = get_video_files(video_folder_path)
+    input_video_file_paths.sort()
+    
+    # make output folder for photos
+    output_photo_folder_path = os.path.join(output_dir_path,hdf5_file_name[:-3]+"photos")
+    if not os.path.exists(output_photo_folder_path):
+        os.makedirs(output_photo_folder_path)
+    
+    
+    csv_file_again = open(output_database_csv, "r")
+    
+    line = csv_file_again.readline()
     # go through all timestamps and save photos
     while(line != ""):
-        line = f.readline()
+        line = csv_file_again.readline()
         timestamp = line.split(",")[0]      # string
         
     
