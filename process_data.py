@@ -328,6 +328,15 @@ def get_vehicle_photos(input_video_file_paths, timestamp, num_pics):
     # loop through frames and find num_pics frames around timestamp
     # return frames as numpy arrays
     
+    
+    vidcap = cv2.VideoCapture('big_buck_bunny_720p_5mb.mp4')
+    success, image = vidcap.read()
+    count = 0
+    while success:
+      cv2.imwrite("frame%d.jpg" % count, image)     # save frame as JPEG file      
+      success,image = vidcap.read()
+      print('Read a new frame: ', success)
+      count += 1
 
 if __name__ == "__main__":
     main()
