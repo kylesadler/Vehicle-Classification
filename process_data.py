@@ -327,9 +327,13 @@ def get_vehicle_photos(input_video_file_paths, timestamp, num_pics):
     # use opencv to get the timestamp of each frame CAP_PROP_POS_MSEC 
     # loop through frames and find num_pics frames around timestamp
     # return frames as numpy arrays
+    vehicle_photos = []
     
     
-    vidcap = cv2.VideoCapture('big_buck_bunny_720p_5mb.mp4')
+    
+    vidcap = cv2.VideoCapture(video_file_path)
+    vidcap.get(cv2.CV_CAP_PROP_POS_MSEC) # get the ms time in video
+    vidcap.set(cv2.CV_CAP_PROP_POS_MSEC, time) # set the ms time in video
     success, image = vidcap.read()
     count = 0
     while success:
@@ -337,6 +341,8 @@ def get_vehicle_photos(input_video_file_paths, timestamp, num_pics):
       success,image = vidcap.read()
       print('Read a new frame: ', success)
       count += 1
+      
+    vidcap.release()
 
 if __name__ == "__main__":
     main()
