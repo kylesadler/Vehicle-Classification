@@ -317,6 +317,17 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
         os.makedirs(output_photo_folder_path)
     
     
+    
+    # go through all timestamps and save photos
+    while(line != ""):
+        line = csv_file_again.readline()
+        timestamp = line.split(",")[0]      # string
+        
+    
+        # save photos of vehicle to output_photo_folder_path
+        save_vehical_frames(input_video_file_paths, output_photo_folder_path, timestamp)
+
+    
     csv_file_again = open(output_database_csv, "r")
     line = csv_file_again.readline()
     end_time_of_last_vid = 
@@ -332,51 +343,43 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
         if(time): # if there is a vehicle at this time
             
             count = 0
-            try:
-                success, image = vidcap.read() # TODO account for end of video vehicles
-                while(success and count < FRAMES_PER_VEHICLE):
-                    
-                    image_file_path = os.path.join(output_photo_folder_path, str(timestamp) + "_" + str(i))
-                    try:
-                        # save photo
-                        cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, vehicle_photo) 
-                    except:
-                        print("could not save " + str(timestamp) + "_" + str(i) + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
-            
-                    success, image = vidcap.read()
-                    count += 1
-            
-            except:
+            success, image = vidcap.read() # TODO account for end of video vehicles
+            while(success and count < FRAMES_PER_VEHICLE):
+                
+                image_file_path = os.path.join(output_photo_folder_path, str(timestamp) + "_" + str(i))
+                try:
+                    # save photo
+                    cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, vehicle_photo) 
+                except:
+                    print("could not save " + image_file_path + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
+        
+                success, image = vidcap.read()
+                count += 1
+                
+            if(count < FRAMES_PER_VEHICLE and not success): # if vehicle is at end of on video
                 
                 temp_vidcap = cv2.VideoCapture(input_video_file_paths[i+1])
-                success, image = temp_vidcap.read() # TODO account for end of video vehicles
+                success, image = temp_vidcap.read() 
+                
                 while(success and count < FRAMES_PER_VEHICLE):
                     
                     image_file_path = os.path.join(output_photo_folder_path, str(timestamp) + "_" + str(i))
+                    
                     try:
                         # save photo
                         cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, vehicle_photo) 
                     except:
-                        print("could not save " + str(timestamp) + "_" + str(i) + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
+                        print("could not save " + image_file_path + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
             
                     success, image = temp_vidcap.read()
                     count += 1
                     
-                    temp_vidcap.release()
+                temp_vidcap.release()
+                
+                vidcap.release()
+                continue
                 
               
-        vidcap.release()
-        
-    
-    # go through all timestamps and save photos
-    while(line != ""):
-        line = csv_file_again.readline()
-        timestamp = line.split(",")[0]      # string
-        
-    
-        # save photos of vehicle to output_photo_folder_path
-        save_vehical_frames(input_video_file_paths, output_photo_folder_path, timestamp)
-
 
 if __name__ == "__main__":
     main()
