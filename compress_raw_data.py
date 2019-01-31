@@ -166,7 +166,7 @@ def parse_line(l):
     # transmission type is sSN LMDscandata CoLa A Hex
     # telegram is hex --> convert to ascii --> convert to hex
     
-    timestamp = str(l[:19].replace(":","").replace(".","").replace("-","").replace(" ",""))
+    timestamp = int(l[:19].replace(":","").replace(".","").replace("-","").replace(" ",""))
     
     index = l.index("<") # get first < in line
     line = l[index:].replace('<',"").replace(">","")
