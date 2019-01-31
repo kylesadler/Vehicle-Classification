@@ -329,14 +329,21 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
         vidcap.set(cv2.CV_CAP_PROP_POS_MSEC, time)
         
         # loop through frames and find num_pics frames around timestamp
-    success, image = vidcap.read() # TODO account for end of video vehicles
-    count = 0
-    while(success and count < num_pics):
-      vehicle_photos.append(image)  
-      success, image = vidcap.read()
-      count += 1
-      
-    vidcap.release()
+        success, image = vidcap.read() # TODO account for end of video vehicles
+        count = 0
+        while(success and count < FRAMES_PER_VEHICLE):
+            
+            image_file_path = os.path.join(output_photo_folder_path, str(timestamp) + "_" + str(i))
+            try:
+                # save photo
+                cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, vehicle_photo) 
+            except:
+                print("could not save " + str(timestamp) + "_" + str(i) + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
+    
+            success, image = vidcap.read()
+            count += 1
+          
+        vidcap.release()
         
     
     # go through all timestamps and save photos
@@ -347,53 +354,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     
         # save photos of vehicle to output_photo_folder_path
         save_vehical_frames(input_video_file_paths, output_photo_folder_path, timestamp)
-                        
-    
-def save_vehical_frames(input_video_file_paths, output_photo_folder_path, timestamp):
-    """ return unique photo_ID """
-    vehicle_photos = get_vehicle_photos(input_video_file_paths, timestamp, FRAMES_PER_VEHICLE)
-    
-    for i in range(len(vehicle_photos)):
-        vehicle_photo = vehicle_photos[i]
-        image_file_path = os.path.join(output_photo_folder_path, str(timestamp) + "_" + str(i))
-        try:
-            # save photo
-            cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, vehicle_photo) 
-        except:
-            print("could not save " + str(timestamp) + "_" + str(i) + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
-    
-def get_vehicle_photos(input_video_file_paths, timestamp, num_pics):
-    """ return num_pics vehicle_photos from input_video_file_paths around timestamp """
-    
-    # initialize photo list
-    vehicle_photos = []
-    
-    
-    
-    # open video with greatest time before timestamp 
-    video_file_path = 
-    
-    # convert timestamp to time relative to the video
-    time = 
-    
-    
-    # open correct video
-    vidcap = cv2.VideoCapture(video_file_path)
-    
-    # go to the correct time in video (time in ms)
-    vidcap.set(cv2.CV_CAP_PROP_POS_MSEC, time)
-    
-    # loop through frames and find num_pics frames around timestamp
-    success, image = vidcap.read() # TODO account for end of video vehicles
-    count = 0
-    while(success and count < num_pics):
-      vehicle_photos.append(image)  
-      success, image = vidcap.read()
-      count += 1
-      
-    vidcap.release()
-    
-    return vehicle_photos
+
 
 if __name__ == "__main__":
     main()
