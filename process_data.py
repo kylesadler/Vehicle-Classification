@@ -360,4 +360,3 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
 if __name__ == "__main__":
     main()
     
-    
