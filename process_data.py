@@ -52,6 +52,10 @@ from datetime import datetime
 import os
 import cv2
 
+from moviepy.editor import VideoFileClip
+clip = VideoFileClip("my_video.mp4")
+print( clip.duration )
+
 WORKING_DIR = "." # where all the data is stored, if in same folder as this script, WORKING_DIR = "."
 VID_FILE_EXTENSION = ".MTS"
 DETECTION_THRESHOLD = 10
@@ -255,6 +259,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     current_video_file_paths_index = 0
     current_video_capture = cv2.VideoCapture(input_video_file_paths[current_video_file_paths_index])
     current_video_capture_total_frames = current_video_capture.get(cv2.CV_CAP_PROP_FRAME_COUNT)
+    prev_timestamp=
     
     # loop through all keys, save timestamps in csv, save lidar signatures in hdf5
     for key in input_lidar_data_keys:
@@ -279,29 +284,35 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                         
                         vehicle_ID = current_vehicle_signature[0][-1] # get the timestamp of first vehicle measurement
                         
-
-
+                        
+                        time_difference = get_timestamp(vehicle_ID) - prev_timestamp
+                        
+                        # advance through the videos time_difference
 
                         # go to current time in ms
                         is_set = current_video_capture.set(cv2.CV_CAP_PROP_POS_MSEC, time)
                         
                         current_frame = current_video_capture.get(cv2.CV_CAP_PROP_POS_FRAMES)
-                        
-                        if(current_video_capture_total_frames - current_frame >= FRAMES_PER_VEHICLE)
-                        """while(not is_set):
+                        while(not is_set): # assumption: there is at least on vehicle per video
                             current_video_capture.release()
                             current_video_file_paths_index+=1
                             current_video_capture = cv2.VideoCapture(input_video_file_paths[current_video_file_paths_index])
                             current_video_capture_total_frames = current_video_capture.get(cv2.CV_CAP_PROP_FRAME_COUNT)
                             end_time_of_last_vid
                             is_set = current_video_capture.set(cv2.CV_CAP_PROP_POS_MSEC, time)
-                        """
-                        success, image = current_video_capture.read()
-
+                        
+                        
                         frame = 0
-                                                    
+                        success, image = current_video_capture.read()
+    
                         if(success and frame < FRAMES_PER_VEHICLE):
+                            if(current_video_capture_total_frames == current_video_capture.get(cv2.CV_CAP_PROP_POS_FRAMES)):
+                                current_video_capture.release()
+                                current_video_file_paths_index+=1
+                                current_video_capture = cv2.VideoCapture(input_video_file_paths[current_video_file_paths_index])
+                                current_video_capture_total_frames = current_video_capture.get(cv2.CV_CAP_PROP_FRAME_COUNT)
                             
+                                
                             image_file_path = os.path.join(output_photo_folder_path, str(vehicle_ID) + "_" + str(frame))
                             try: # save photo
                                 cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, vehicle_photo) 
@@ -310,7 +321,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                             
                             success, image = vidcap.read()
                             frame+=1
-                        
+                            
                         
                         
                         
