@@ -254,7 +254,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     end_time_of_last_vid = VIDEO_START_TIME_MS
     current_video_file_paths_index = 0
     current_video_capture = cv2.VideoCapture(input_video_file_paths[current_video_file_paths_index])
-    frames_to_capture = 0
+    current_video_capture_total_frames = current_video_capture.get(cv2.CV_CAP_PROP_FRAME_COUNT)
     
     # loop through all keys, save timestamps in csv, save lidar signatures in hdf5
     for key in input_lidar_data_keys:
@@ -282,35 +282,35 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
 
 
 
-                    
-                        vidcap = cv2.VideoCapture(video_path) # open video and read first image
-                        success, image = vidcap.read()
+                        # go to current time in ms
+                        is_set = current_video_capture.set(cv2.CV_CAP_PROP_POS_MSEC, time)
                         
-                        while(success): # loop through all frames in the video
+                        current_frame = current_video_capture.get(cv2.CV_CAP_PROP_POS_FRAMES)
+                        
+                        if(current_video_capture_total_frames - current_frame >= FRAMES_PER_VEHICLE)
+                        """while(not is_set):
+                            current_video_capture.release()
+                            current_video_file_paths_index+=1
+                            current_video_capture = cv2.VideoCapture(input_video_file_paths[current_video_file_paths_index])
+                            current_video_capture_total_frames = current_video_capture.get(cv2.CV_CAP_PROP_FRAME_COUNT)
+                            end_time_of_last_vid
+                            is_set = current_video_capture.set(cv2.CV_CAP_PROP_POS_MSEC, time)
+                        """
+                        success, image = current_video_capture.read()
+
+                        frame = 0
+                                                    
+                        if(success and frame < FRAMES_PER_VEHICLE):
                             
+                            image_file_path = os.path.join(output_photo_folder_path, str(vehicle_ID) + "_" + str(frame))
+                            try: # save photo
+                                cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, vehicle_photo) 
+                            except:
+                                print("could not save " + image_file_path + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
                             
-                            # current time in ms
-                            vidcap.set(cv2.CV_CAP_PROP_POS_MSEC, time)
-                            
-                            if(time): # if there is a vehicle at this time
-                                frames_to_capture = FRAMES_PER_VEHICLE
-                                next_vehicle_timestamp = csv_file_again.readline().split(",")[0]
-                                
-                            if(frame < FRAMES_PER_VEHICLE):
-                                
-                                image_file_path = os.path.join(output_photo_folder_path, str(vehicle_ID) + "_" + str(frame))
-                                try:
-                                    # save photo
-                                    cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, vehicle_photo) 
-                                except:
-                                    print("could not save " + image_file_path + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
-                                
-                                frame+=1
-                                
                             success, image = vidcap.read()
-                            
-                            
-                        vidcap.release()
+                            frame+=1
+                        
                         
                         
                         
