@@ -291,7 +291,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                         
                         current_time_ms = to_ms(vehicle_ID)
                         time_difference_ms = current_time_ms - prev_time_ms
-                        prev_time_ms = vehicle_ID
+                        prev_timestamp = current_time_ms
                         
                         # advance through the videos, get the correct video at correct time
                         current_video_capture_time = current_video_capture.get(cv2.CV_CAP_PROP_POS_MSEC)
@@ -301,12 +301,12 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                             current_video_capture.set(cv2.CV_CAP_PROP_POS_FRAMES, current_video_capture_total_frames)
                             max_time = current_video_capture.get(cv2.CV_CAP_PROP_POS_MSEC)
                             time_difference_ms += current_video_capture_time - max_time
+                            prev_timestamp = 
                             current_video_capture.release()
                             current_video_file_paths_index+=1
                             current_video_capture = cv2.VideoCapture(input_video_file_paths[current_video_file_paths_index])
                             current_video_capture_total_frames = current_video_capture.get(cv2.CV_CAP_PROP_FRAME_COUNT)
                             is_set = current_video_capture.set(cv2.CV_CAP_PROP_POS_MSEC, time_difference_ms)
-                            prev_timestamp = 
                            
                         
                         frame = 0
