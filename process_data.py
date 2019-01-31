@@ -57,6 +57,7 @@ VID_FILE_EXTENSION = ".MTS"
 DETECTION_THRESHOLD = 10
 IMAGE_SAVE_EXTENSION = ".jpg"
 FRAMES_PER_VEHICLE = 10
+VIDEO_START_TIME_MS
 
 
 
@@ -181,9 +182,29 @@ def process_folder(folder):
         process_files(hdf5_file, video_folder, WORKING_DIR)
         
 def process_files(hdf5_file_path, video_folder_path, output_dir):
-    """ given paths to corresponding hdf5 file and video folder
+    """ 
+        SORRY FOR THE LONG FUNCTION
+    
+        given paths to corresponding hdf5 file and video folder
         hdf5_file_path = WORKING_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMM.h5
         video_folder_path = WORKING_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMM_video
+        
+                                       
+        parse vehicles and store them in output_lidar_signature_hdf5
+        
+        given:
+            
+            input_lidar_data_hdf5
+            input_lidar_data_keys      (sorted chronologically)
+            input_video_file_paths     (sorted chronologically)
+            output_database_csv        
+            output_photo_folder_path
+            output_lidar_signature_hdf5
+        
+        output:
+            a populated hdf5_output_file with (vehicle_ID, processed lidar images)
+            a populated output_database_csv with (vehicle_ID,label)
+            photos of vehicles in output_photo_folder_path
     """
     
     
@@ -216,23 +237,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     """                               """
     """  process csv and hdf5 files   """
     """                               """
-    """                               
-        parse vehicles and store them in output_lidar_signature_hdf5
-        
-        given:
-            
-            input_lidar_data_hdf5
-            input_lidar_data_keys      (sorted chronologically)
-            input_video_file_paths     (sorted chronologically)
-            output_database_csv        
-            output_photo_folder_path
-            output_lidar_signature_hdf5
-        
-        output:
-            a populated hdf5_output_file with (vehicle_ID, processed lidar images)
-            a populated output_database_csv with (vehicle_ID,label)
-            photos of vehicles in output_photo_folder_path
-    """
+    """                               """
 
     
     gap_count = 0 # consecutive measurements between vehicle detections
@@ -314,35 +319,52 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     
     csv_file_again = open(output_database_csv, "r")
     line = csv_file_again.readline()
+    end_time_of_last_vid = 
     
     # go through all the videos searching for vehicles
-    for video_file in input_video_file_paths:
+    for i in range(len(input_video_file_paths)):
         
-        vidcap = cv2.VideoCapture(video_file_path) # open video
+        vidcap = cv2.VideoCapture(input_video_file_paths[i]) # open video
         
-        # go to the correct time in video (time in ms)
+        # current time in ms
         time = vidcap.get(cv2.CV_CAP_PROP_POS_MSEC)
         
-        # loop through frames and find num_pics frames around timestamp
-        success, image = vidcap.read() # TODO account for end of video vehicles
-        count = 0
-        vidcap.set(cv2.CV_CAP_PROP_POS_MSEC, time)
-        
-        # loop through frames and find num_pics frames around timestamp
-        success, image = vidcap.read() # TODO account for end of video vehicles
-        count = 0
-        while(success and count < FRAMES_PER_VEHICLE):
+        if(time): # if there is a vehicle at this time
             
-            image_file_path = os.path.join(output_photo_folder_path, str(timestamp) + "_" + str(i))
+            count = 0
             try:
-                # save photo
-                cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, vehicle_photo) 
+                success, image = vidcap.read() # TODO account for end of video vehicles
+                while(success and count < FRAMES_PER_VEHICLE):
+                    
+                    image_file_path = os.path.join(output_photo_folder_path, str(timestamp) + "_" + str(i))
+                    try:
+                        # save photo
+                        cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, vehicle_photo) 
+                    except:
+                        print("could not save " + str(timestamp) + "_" + str(i) + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
+            
+                    success, image = vidcap.read()
+                    count += 1
+            
             except:
-                print("could not save " + str(timestamp) + "_" + str(i) + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
-    
-            success, image = vidcap.read()
-            count += 1
-          
+                
+                temp_vidcap = cv2.VideoCapture(input_video_file_paths[i+1])
+                success, image = temp_vidcap.read() # TODO account for end of video vehicles
+                while(success and count < FRAMES_PER_VEHICLE):
+                    
+                    image_file_path = os.path.join(output_photo_folder_path, str(timestamp) + "_" + str(i))
+                    try:
+                        # save photo
+                        cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, vehicle_photo) 
+                    except:
+                        print("could not save " + str(timestamp) + "_" + str(i) + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
+            
+                    success, image = temp_vidcap.read()
+                    count += 1
+                    
+                    temp_vidcap.release()
+                
+              
         vidcap.release()
         
     
