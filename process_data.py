@@ -232,17 +232,27 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     output_database_csv = open(os.path.join(output_dir_path,hdf5_file_name[:-3]+"_vehicles.csv"), 'a')
     output_database_csv.write("vehicle_ID,label")
     
+    # get list of all the video file paths in order
+    input_video_file_paths = get_video_files(video_folder_path)
+    input_video_file_paths.sort()
+    
+    # make output folder for photos
+    output_photo_folder_path = os.path.join(output_dir_path,hdf5_file_name[:-3]+"photos")
+    if not os.path.exists(output_photo_folder_path):
+        os.makedirs(output_photo_folder_path)
+    
     
     """                               """
     """                               """
-    """  process csv and hdf5 files   """
+    """       process all data        """
     """                               """
     """                               """
 
     
     gap_count = 0 # consecutive measurements between vehicle detections
     current_vehicle_signature = []
-    
+    end_time_of_last_vid = 
+    frames_to_capture = 0
     
     # loop through all keys, save timestamps in csv, save lidar signatures in hdf5
     for key in input_lidar_data_keys:
@@ -264,6 +274,49 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
                     
                     # end vehicle and save everything but photos
                     if(gap_count >= DETECTION_THRESHOLD):
+                        
+
+
+
+                        
+                        # go through all the videos searching for vehicles
+                        for video_path in input_video_file_paths:
+                            
+                            vidcap = cv2.VideoCapture(video_path) # open video and read first image
+                            success, image = vidcap.read()
+                            
+                            while(success): # loop through all frames in the video
+                                
+                                
+                                # current time in ms
+                                time = vidcap.get(cv2.CV_CAP_PROP_POS_MSEC)
+                                
+                                if(time): # if there is a vehicle at this time
+                                    frames_to_capture = FRAMES_PER_VEHICLE
+                                    next_vehicle_timestamp = csv_file_again.readline().split(",")[0]
+                                    
+                                if(frames_to_capture > 0):
+                                    
+                                    image_file_path = os.path.join(output_photo_folder_path, str(timestamp) + "_" + str(i))
+                                        try:
+                                            # save photo
+                                            cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, vehicle_photo) 
+                                        except:
+                                            print("could not save " + image_file_path + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
+                                    
+                                    frames_to_capture-=1
+                                    
+                                success, image = vidcap.read()
+                                
+                                
+                            vidcap.release()
+                        
+                        
+                        
+                        
+                        
+                        
+                        
                         
                         vehicle_ID = current_vehicle_signature[0][-1] # get the timestamp of first vehicle measurement
                         
@@ -298,64 +351,6 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     output_database_csv.close()
     output_lidar_signature_hdf5.close()
     
-    
-    
-    """                               """
-    """                               """
-    """      save all the photos      """
-    """                               """
-    """                               """
-    
-    
-    # get list of all the video file paths in order
-    input_video_file_paths = get_video_files(video_folder_path)
-    input_video_file_paths.sort()
-    
-    # make output folder for photos
-    output_photo_folder_path = os.path.join(output_dir_path,hdf5_file_name[:-3]+"photos")
-    if not os.path.exists(output_photo_folder_path):
-        os.makedirs(output_photo_folder_path)
-    
-    header_line = csv_file_again.readline() # throw away line
-    
-    csv_file_again = open(output_database_csv, "r")
-    line = csv_file_again.readline()
-    end_time_of_last_vid = 
-    frames_to_capture = 0
-    next_vehicle_timestamp = csv_file_again.readline().split(",")[0]      # string
-    
-    # go through all the videos searching for vehicles
-    for video_path in input_video_file_paths:
-        
-        vidcap = cv2.VideoCapture(video_path) # open video and read first image
-        success, image = vidcap.read()
-        
-        while(success): # loop through all frames in the video
-            
-            
-            # current time in ms
-            time = vidcap.get(cv2.CV_CAP_PROP_POS_MSEC)
-            
-            if(time): # if there is a vehicle at this time
-                frames_to_capture = FRAMES_PER_VEHICLE
-                next_vehicle_timestamp = csv_file_again.readline().split(",")[0]
-                
-            if(frames_to_capture > 0):
-                
-                image_file_path = os.path.join(output_photo_folder_path, str(timestamp) + "_" + str(i))
-                    try:
-                        # save photo
-                        cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, vehicle_photo) 
-                    except:
-                        print("could not save " + image_file_path + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
-                
-                frames_to_capture-=1
-                
-            success, image = vidcap.read()
-            
-            
-        vidcap.release()
-        
 
 if __name__ == "__main__":
     main()
