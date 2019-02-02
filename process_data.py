@@ -191,9 +191,9 @@ def process_folder(folder):
         hdf5_files = file_pair[1]  
         
 	for hf in hdf5_files:
-            process_files(hf, video_folder, WORKING_DIR)
+            process_files(hf, video_folder)
         
-def process_files(hdf5_file_path, video_folder_path, output_dir):
+def process_files(hdf5_file_path, video_folder_path):
     """ 
         SORRY FOR THE LONG FUNCTION, didn't want to copy lots of variables to sub functions
     
@@ -228,13 +228,15 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     
     # make output_dir_path if it doesn't exist
     head, hdf5_file_name = os.path.split(hdf5_file_path)
-    output_dir_path = os.path.join(output_dir, hdf5_file_name[:10] + " PROCESSED")
+    output_dir_path = os.path.join(WORKING_DIR, hdf5_file_name[:10] + " PROCESSED")
     if not os.path.exists(output_dir_path):
         os.makedirs(output_dir_path)
+
+    file_name_seed = os.path.join(output_dir_path, hdf5_file_name[:-4])
     
     # make output hdf5 file -- stores (vehicle_ID, lidar_signature) 
     # YYYY-MM-DD-HHMM_vehicles.h5
-    output_lidar_signature_hdf5 = h5py.File(os.path.join(output_dir_path, hdf5_file_name[:-4]+"_vehicles.h5"), 'a')
+    output_lidar_signature_hdf5 = h5py.File(file_name_seed + "_vehicles.h5", 'a')
     
     # open input hdf5 file -- stores compressed lidar data
     input_lidar_data_hdf5 = h5py.File(hdf5_file_path, 'r')
@@ -242,7 +244,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     input_lidar_data_keys.sort() # ensure that keys are processed in order
     
     # make output csv file -- (stores vehcile_ID, label)
-    output_database_csv = open(os.path.join(output_dir_path,hdf5_file_name[:-3]+"_vehicles.csv"), 'a')
+    output_database_csv = open(file_name_seed + "_vehicles.csv", 'a')
     output_database_csv.write("vehicle_ID,label")
     
     # get list of all the video file paths in order
@@ -250,7 +252,7 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
     input_video_file_paths.sort()
     
     # make output folder for photos
-    output_photo_folder_path = os.path.join(output_dir_path,hdf5_file_name[:-3]+"photos")
+    output_photo_folder_path = file_name_seed + "_photos"
     if not os.path.exists(output_photo_folder_path):
         os.makedirs(output_photo_folder_path)
     
