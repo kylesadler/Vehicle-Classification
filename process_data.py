@@ -57,9 +57,11 @@ from datetime import datetime
 import os
 import cv2
 
+"""
 from moviepy.editor import VideoFileClip
 clip = VideoFileClip("my_video.mp4")
 print( clip.duration )
+"""
 
 WORKING_DIR = "." # where all the data is stored, if in same folder as this script, WORKING_DIR = "."
 VID_FILE_EXTENSION = ".MTS"
@@ -130,7 +132,7 @@ def get_file_pairs(root):
     for vid_dir in vid_dirs:
         for hf in hdf5_files:
             try:
-                if(vid_dir[:15] == hf[:15]):
+                if(vid_dir[:15] == hf[:15]): # if YYYY-MM-DD-HHMM matches on filenames (first 15 chars)
                     file_pairs.append([vid_dir, hf])
             except:
                 pass
@@ -144,7 +146,7 @@ def get_folders_to_process(root):
     
     folders = []
     for un_folder in unprocessed_folders:
-        if(un_folder[:11] + un_folder[13:] not in processed_folders):
+        if(un_folder[:11] + un_folder[13:] not in processed_folders): # if file names share the same date
             folders.append(un_folder)
             
     return folders
@@ -182,20 +184,20 @@ def process_folder(folder):
     
     """
     # for multiple collections on the same date
-    file_pairs = get_file_pairs(folder) # files[data_collection_num][file_type: 0 = video_dir, 1 = hdf5_file]
+    file_pairs = get_file_pairs(folder) # files[data_collection_num][file_type: 0 = video_dir, 1 = hdf5_files]
     
     for file_pair in file_pairs:
         video_folder = file_pair[0]  
-        hdf5_file = file_pair[1]  
+        hdf5_files = file_pair[1]  
         
-        process_files(hdf5_file, video_folder, WORKING_DIR)
+        process_files(hdf5_files, video_folder, WORKING_DIR)
         
 def process_files(hdf5_file_path, video_folder_path, output_dir):
     """ 
         SORRY FOR THE LONG FUNCTION, didn't want to copy lots of variables to sub functions
     
         given paths to corresponding hdf5 file and video folder
-        hdf5_file_path = WORKING_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMM.h5
+        hdf5_file_paths = [WORKING_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMMX.h5, ...] (X is recording location)
         video_folder_path = WORKING_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMM_video
         
                                        
