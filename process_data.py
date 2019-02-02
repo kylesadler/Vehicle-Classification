@@ -70,7 +70,7 @@ DETECTION_THRESHOLD = 10
 IMAGE_SAVE_EXTENSION = ".jpg"
 FRAMES_PER_VEHICLE = 10
 SECONDS_PER_FRAME = .25 # number of seconds between frames
-
+EXPECTED_DISTANCE
 
 
 def main():
@@ -81,13 +81,16 @@ def main():
         process_folder(os.path.join(WORKING_DIR, folder))
     
 def normalize_vehicle(v):
-    """ takes in numpy array of vehicle data, processes it, returns numpy array of vehicle data """
-    pass
+    """ take in numpy array of vehicle data, normalize it, return numpy array of vehicle data """
+    return (v - np.min(v))/np.ptp(v)
 
 
-def vehicle_detected(a):
-    """ a is a numpy array of arbitrary length. method returns true if there is a vehicle """
-    pass
+def vehicle_detected(a, expected_points):
+    """ a is a 1 x N numpy array. method returns true if there is a vehicle 
+        expected_points is a 1 x N vector of the expected distance for each point
+    """
+    # return true if at least 10% of the points are more than 10% away from the expected value
+    return (abs(a - expected_points) > expected_points * .10).sum() > a.size()*.10
 
 
     
@@ -293,10 +296,10 @@ def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_
     """
     gap_count = 0                         # consecutive measurements between vehicle detections
     current_vehicle_signature = []
+    median_points = [] # TODO generate median points
     
-    # lidar internal time when video starts converted to seconds
-    vid_parse = video_parser(input_video_file_paths, output_photo_folder_path, to_absolute_sec(video_start))
-      
+    # video_start is string 'HHMMSSmmm' when the video starts according to the lidar
+    vid_parse = video_parser(input_video_file_paths, output_photo_folder_path, video_start)
 
     
     # loop through all keys, save timestamps in csv, save lidar signatures in hdf5
@@ -306,7 +309,7 @@ def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_
         for lidar_measurement in np.array(input_lidar_data_hdf5.get(key)):
             
             # if there is a vehicle in the current frame, save it to current_vehicle_signature
-            if(vehicle_detected(lidar_measurement)):
+            if(vehicle_detected(lidar_measurement, median_points)):
                 current_vehicle_signature.add(lidar_measurement)
                 gap_count = 0
             else:
@@ -333,23 +336,10 @@ def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_
                             output_lidar_signature_hdf5.close()
                             raise Exception("could not save vehicle: " + vehicle_ID)
     
-    
-
                         
                         current_vehicle_signature = []
                         gap_count = 0
                         
-    
-                           
-
-
-def to_absolute_sec(time):
-    """ convert string 'HHMMSSmmm' to sec """
-    hours = int(time[:2])
-    minutes = int(time[2:4]) + hours*60
-    sec = int(time[4:6]) + minutes*60
-    return int(time[6:])/1000 + sec
-    
 def save_to_hdf5(file, dset_name, dset_data):
     try: # to save the dataset
         file.create_dataset(dset_name, data=dset_data)
@@ -373,21 +363,19 @@ if __name__ == "__main__":
 # keeps track of video traversal
 class video_parser:
     """ all times are in seconds """
-    def __init__(self, in_paths, out_path, time_stamp):
+    def __init__(self, in_paths, out_path, video_start_time):
         self.input_video_file_paths = in_paths
         self.output_photo_folder_path = out_path
         self.video_timestamp = 0 # stores the timestamp in 
         self.video_index = 0
         self.video = VideoFileClip(self.input_video_file_paths[0])    # current video
-        self.absolute_time = time_stamp # stores the absolute time
-    
-    
+        self.absolute_time = self.to_absolute_sec(video_start_time) # stores the absolute time
     
     def save_vehicle_images(vehicle_ID):
         """ save vehicle frames """
         
         # set self.video_timestamp to the specified time
-        self.advance_video_to(to_absolute_sec(vehicle_ID[8:17])) # to_absolute_sec('HHMMSSmmm') (entire vehicle_ID is YYYYMMDDHHMMSSmmmX)
+        self.advance_video_to(self.to_absolute_sec(vehicle_ID[8:17])) # to_absolute_sec('HHMMSSmmm') (entire vehicle_ID is YYYYMMDDHHMMSSmmmX)
     
         for frame in range(FAMES_PER_VEHICLE):
     
@@ -397,16 +385,19 @@ class video_parser:
     
             # advance video by SECONDS_PER_FRAME seconds
             self.advance_video_to(self.absolute_time + SECONDS_PER_FRAME)
-    
-        
-        
-        
         
     def advance_video_to(self, new_time): # throws an exception
-        """ advance video to specified absolute timestamp """
+        """ advance video to specified absolute timestamp
+            update:
+                self.absolute_time
+                self.video_timestamp
+                self.video
+                self.video_index
+                """
         # find vehicle in videos
         time_to_advance = new_time - self.absolute_time
         self.absolute_time = new_time
+        
         # while the time_to_advance is greater than the time left in current video
         while(time_to_advance > current_video.duration - self.video_timestamp):
             time_to_advance -= current_video.duration - self.video_timestamp
@@ -415,8 +406,14 @@ class video_parser:
             self.video = VideoFileClip(self.input_video_file_paths[self.video_index])
             self.video_timestamp = 0
         
-        self.video_timestamp += time
-
-          
+        self.video_timestamp += time_to_advance
+    
+    def to_absolute_sec(self, time):
+        """ convert string 'HHMMSSmmm' to sec """
+        hours = int(time[:2])
+        minutes = int(time[2:4]) + hours*60
+        sec = int(time[4:6]) + minutes*60
+        return int(time[6:])/1000 + sec
+    
     
     
