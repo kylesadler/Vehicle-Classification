@@ -89,8 +89,8 @@ def vehicle_detected(a, MIN_DISTANCE_mm, MAX_DISTANCE_mm):
     """ a is a 1 x N numpy array. method returns true if there is a vehicle 
         expected_points is a 1 x N vector of the expected distance for each point
     """
-    # return true if more 50% of the points are within MIN_DISTANCE_mm and MAX_DISTANCE_mm
-    return ((a > MIN_DISTANCE_mm) and (a < MAX_DISTANCE_mm)).sum() > a.size()*.5
+    # return true if more 30% of the points are within MIN_DISTANCE_mm and MAX_DISTANCE_mm
+    return ((a > MIN_DISTANCE_mm) and (a < MAX_DISTANCE_mm)).sum() > a.size()*.3
 
 
     
