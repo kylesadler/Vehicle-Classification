@@ -276,7 +276,10 @@ def process_files(hdf5_file_path, video_folder_path):
     current_video_capture = cv2.VideoCapture(input_video_file_paths[current_video_file_paths_index])
     current_video_capture_total_frames = current_video_capture.get(cv2.CV_CAP_PROP_FRAME_COUNT)
     current_video_capture_time = current_video_capture.get(cv2.CV_CAP_PROP_POS_MSEC)
-    prev_time_ms = to_ms(VIDEO_START_TIME) #YYYYMMDDHHMMSSmmm converted to ms
+    
+    # make sure about these
+    prev_time_ms =
+    time_left_in_current_video_ms = to_ms(VIDEO_START_TIME) #string 'YYYYMMDDHHMMSSmmmX' converted to ms relative to lidar sensors internal time
     
     # loop through all keys, save timestamps in csv, save lidar signatures in hdf5
     for key in input_lidar_data_keys:
@@ -308,9 +311,11 @@ def process_files(hdf5_file_path, video_folder_path):
                         
                         current_time_ms = to_ms(vehicle_ID)
                         time_to_advance_ms = current_time_ms - prev_time_ms # time to advance in videos
-                        prev_timestamp = current_time_ms
+                        prev_time_ms = current_time_ms
                         
-                        while(time_to_advance_ms > get_video_time_ms(current_video_capture)):
+                        # advance through the videos to find the correct one
+                        while(time_to_advance_ms > time_left_in_current_video_ms):
+                            time_to_advance-=time_left_in_current_video_ms
                             current_video_capture.release()
                             current_video_file_paths_index+=1
 
@@ -324,21 +329,18 @@ def process_files(hdf5_file_path, video_folder_path):
                                 raise e
 
                             current_video_capture_total_frames = current_video_capture.get(cv2.CV_CAP_PROP_FRAME_COUNT)
-
-
-                        # advance through the videos, get the correct video at correct time
-                        current_video_capture_time = current_video_capture.get(cv2.CV_CAP_PROP_POS_MSEC)
-                        is_set = current_video_capture.set(cv2.CV_CAP_PROP_POS_MSEC, current_video_capture_time + time_to_advance_ms)
-                        
-                        if(not is_set): # if current_time + time_diff > max_time 
-                            current_video_capture.set(cv2.CV_CAP_PROP_POS_FRAMES, current_video_capture_total_frames)
-                            max_time = current_video_capture.get(cv2.CV_CAP_PROP_POS_MSEC)
-                            time_to_advance_ms += current_video_capture_time - max_time
-                            prev_timestamp = 
+                            time_left_in_current_video_ms = get_video_time_ms(current_video_capture)
                             
-                            is_set = current_video_capture.set(cv2.CV_CAP_PROP_POS_MSEC, time_to_advance_ms)
+
+
+                        # go to correct time in correct video
+                        current_video_capture_time = current_video_capture.get(cv2.CV_CAP_PROP_POS_MSEC)
+                        assert(current_video_capture.set(cv2.CV_CAP_PROP_POS_MSEC, current_video_capture_time + time_to_advance_ms))
+                        time_left_in_current_video_ms-=time_to_advance_ms
+                        assert(time_left_in_current_video_ms >= 0)
                            
                         
+                        # video is at correct time
                         frame = 0
                         success, image = current_video_capture.read()
 
@@ -363,6 +365,7 @@ def process_files(hdf5_file_path, video_folder_path):
                                 # maybe make this a try/except
                                 current_video_capture = cv2.VideoCapture(input_video_file_paths[current_video_file_paths_index])
                                 current_video_capture_total_frames = current_video_capture.get(cv2.CV_CAP_PROP_FRAME_COUNT)
+                                time_left_in_current_video_ms = get_video_time_ms(current_video_capture)
                             
                             success, image = vidcap.read()
                         
@@ -410,6 +413,9 @@ def to_ms(time):
     
     
     return ms
+
+def get_video_time_ms(video_cap):
+    pass
 
 if __name__ == "__main__":
     main()
