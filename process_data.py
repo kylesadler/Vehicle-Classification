@@ -307,23 +307,36 @@ def process_files(hdf5_file_path, video_folder_path):
                         
                         
                         current_time_ms = to_ms(vehicle_ID)
-                        time_difference_ms = current_time_ms - prev_time_ms
+                        time_to_advance_ms = current_time_ms - prev_time_ms # time to advance in videos
                         prev_timestamp = current_time_ms
                         
+                        while(time_to_advance_ms > get_video_time_ms(current_video_capture)):
+                            current_video_capture.release()
+                            current_video_file_paths_index+=1
+
+                            try:
+                                current_video_capture = cv2.VideoCapture(input_video_file_paths[current_video_file_paths_index])
+                            except Exeption as e: # if an error, close and save everything
+                                current_video_capture.release()
+                                input_lidar_data_hdf5.close()
+                                output_database_csv.close()
+                                output_lidar_signature_hdf5.close()
+                                raise e
+
+                            current_video_capture_total_frames = current_video_capture.get(cv2.CV_CAP_PROP_FRAME_COUNT)
+
+
                         # advance through the videos, get the correct video at correct time
                         current_video_capture_time = current_video_capture.get(cv2.CV_CAP_PROP_POS_MSEC)
-                        is_set = current_video_capture.set(cv2.CV_CAP_PROP_POS_MSEC, current_video_capture_time + time_difference_ms)
+                        is_set = current_video_capture.set(cv2.CV_CAP_PROP_POS_MSEC, current_video_capture_time + time_to_advance_ms)
                         
                         if(not is_set): # if current_time + time_diff > max_time 
                             current_video_capture.set(cv2.CV_CAP_PROP_POS_FRAMES, current_video_capture_total_frames)
                             max_time = current_video_capture.get(cv2.CV_CAP_PROP_POS_MSEC)
-                            time_difference_ms += current_video_capture_time - max_time
+                            time_to_advance_ms += current_video_capture_time - max_time
                             prev_timestamp = 
-                            current_video_capture.release()
-                            current_video_file_paths_index+=1
-                            current_video_capture = cv2.VideoCapture(input_video_file_paths[current_video_file_paths_index])
-                            current_video_capture_total_frames = current_video_capture.get(cv2.CV_CAP_PROP_FRAME_COUNT)
-                            is_set = current_video_capture.set(cv2.CV_CAP_PROP_POS_MSEC, time_difference_ms)
+                            
+                            is_set = current_video_capture.set(cv2.CV_CAP_PROP_POS_MSEC, time_to_advance_ms)
                            
                         
                         frame = 0
@@ -394,6 +407,7 @@ def process_files(hdf5_file_path, video_folder_path):
 
 def to_ms(time):
     """ convert string 'YYYMMDDHHMMSSmmmX' to ms """
+    
     
     return ms
 
