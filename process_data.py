@@ -68,7 +68,7 @@ VID_FILE_EXTENSION = ".MTS"
 DETECTION_THRESHOLD = 10
 IMAGE_SAVE_EXTENSION = ".jpg"
 FRAMES_PER_VEHICLE = 10
-VIDEO_START_TIME # YYYYMMDDHHMMSSmmm (according to lidar's clock)
+VIDEO_OFFSET # YYYYMMDDHHMMSSmmm (according to lidar's clock)
 
 
 
@@ -278,8 +278,8 @@ def process_files(hdf5_file_path, video_folder_path):
     current_video_capture_time = current_video_capture.get(cv2.CV_CAP_PROP_POS_MSEC)
     
     # make sure about these
-    prev_time_ms =
-    time_left_in_current_video_ms = to_ms(VIDEO_START_TIME) #string 'YYYYMMDDHHMMSSmmmX' converted to ms relative to lidar sensors internal time
+    prev_time_ms = to_ms(VIDEO_OFFSET) # when the first video starts in ms relative to lidar sensors internal time
+    time_left_in_current_video_ms = get_video_time_ms(current_video_capture)
     
     # loop through all keys, save timestamps in csv, save lidar signatures in hdf5
     for key in input_lidar_data_keys:
