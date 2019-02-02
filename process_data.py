@@ -197,9 +197,10 @@ def process_folder(folder):
         video_folder = file_pair[0]  
         hdf5_file = file_pair[1]  
         
-        process_files(hdf5_file, video_folder)
+        vid_strt = input("enter video start time for "+video_folder+" in YYYYMMDDHHMMSSmmm form:
+        process_files(hdf5_file, video_folder, vid_strt)
         
-def process_files(hdf5_file_path, video_folder_path):
+def process_files(hdf5_file_path, video_folder_path, video_start):
     """ 
         SORRY FOR THE LONG FUNCTION, didn't want to copy lots of variables to sub functions
     
@@ -284,7 +285,7 @@ def process_files(hdf5_file_path, video_folder_path):
     current_video_capture_time = current_video_capture.get(cv2.CV_CAP_PROP_POS_MSEC)
     
     # make sure about these
-    prev_time_ms = to_ms(VIDEO_START) # when the first video starts in ms relative to lidar sensors internal time
+    prev_time_ms = to_ms(video_start) # when the first video starts in ms relative to lidar sensors internal time
     time_left_in_current_video_ms = get_video_time_ms(current_video_capture)
     
     # loop through all keys, save timestamps in csv, save lidar signatures in hdf5
@@ -416,9 +417,8 @@ def process_files(hdf5_file_path, video_folder_path):
 
 def to_ms(time):
     """ convert string 'YYYMMDDHHMMSSmmmX' to ms """
+    return int(time[:13])
     
-    
-    return ms
 
 def get_video_time_ms(video_cap):
     pass
