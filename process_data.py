@@ -33,18 +33,18 @@ This module:
         
     output:
     | --> 2018-10-02 PROCESSED/
-        | --> 2018-10-02-1437_vehicles.h5 (vehicle_ID, processed lidar)
-        | --> 2018-10-02-1437_vehicles.csv (vehicle_ID)
-        | --> 2018-10-02-1437_photos
-            | --> 20181002143759_0.png (FRAMES_PER_VEHICLE photos for each vehicle_ID)
-            | --> 20181002143759_1.png
-            | --> 20181002143759_2.png
-            | --> 20181002143759_3.png
+        | --> 2018-10-02_vehicles.h5 (vehicle_ID, processed lidar)
+        | --> 2018-10-02_vehicles.csv (vehicle_ID)
+        | --> 2018-10-02_photos
+            | --> 20181002143759X_0.png (FRAMES_PER_VEHICLE photos for each vehicle_ID)
+            | --> 20181002143759X_1.png
+            | --> 20181002143759X_2.png
+            | --> 20181002143759X_3.png
             |       ...
-            | --> YYYYMMDDHHmmss_0.png
-            | --> YYYYMMDDHHmmss_1.png
-            | --> YYYYMMDDHHmmss_2.png
-            | --> YYYYMMDDHHmmss_3.png
+            | --> YYYYMMDDHHmmssX_0.png
+            | --> YYYYMMDDHHmmssX_1.png
+            | --> YYYYMMDDHHmmssX_2.png
+            | --> YYYYMMDDHHmmssX_3.png
     
     
     upload vehicle_ID to database, groundtruth interface gets photos stored locally of vehicle_ID
@@ -228,15 +228,16 @@ def process_files(hdf5_file_path, video_folder_path):
     
     # make output_dir_path if it doesn't exist
     head, hdf5_file_name = os.path.split(hdf5_file_path)
-    output_dir_path = os.path.join(WORKING_DIR, hdf5_file_name[:10] + " PROCESSED")
+    YYYY_MM_DD = hdf5_file_name[:10]
+    output_dir_path = os.path.join(WORKING_DIR, YYYY_MM_DD + " PROCESSED")
     if not os.path.exists(output_dir_path):
         os.makedirs(output_dir_path)
 
-    file_name_seed = os.path.join(output_dir_path, hdf5_file_name[:-4])
+    file_name_start = os.path.join(output_dir_path, YYYY_MM_DD) #YYYY-MM-DD
     
     # make output hdf5 file -- stores (vehicle_ID, lidar_signature) 
     # YYYY-MM-DD-HHMM_vehicles.h5
-    output_lidar_signature_hdf5 = h5py.File(file_name_seed + "_vehicles.h5", 'a')
+    output_lidar_signature_hdf5 = h5py.File(file_name_start + "_vehicles.h5", 'a')
     
     # open input hdf5 file -- stores compressed lidar data
     input_lidar_data_hdf5 = h5py.File(hdf5_file_path, 'r')
@@ -244,7 +245,7 @@ def process_files(hdf5_file_path, video_folder_path):
     input_lidar_data_keys.sort() # ensure that keys are processed in order
     
     # make output csv file -- (stores vehcile_ID, label)
-    output_database_csv = open(file_name_seed + "_vehicles.csv", 'a')
+    output_database_csv = open(file_name_start + "_vehicles.csv", 'a')
     output_database_csv.write("vehicle_ID,label")
     
     # get list of all the video file paths in order
@@ -252,7 +253,7 @@ def process_files(hdf5_file_path, video_folder_path):
     input_video_file_paths.sort()
     
     # make output folder for photos
-    output_photo_folder_path = file_name_seed + "_photos"
+    output_photo_folder_path = file_name_start + "_photos"
     if not os.path.exists(output_photo_folder_path):
         os.makedirs(output_photo_folder_path)
     
