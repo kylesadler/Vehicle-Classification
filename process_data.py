@@ -226,14 +226,17 @@ def process_files(hdf5_file_path, video_folder_path):
     """                               """
     """                               """
     
-    # make output_dir_path if it doesn't exist
+    
     head, hdf5_file_name = os.path.split(hdf5_file_path)
-    YYYY_MM_DD = hdf5_file_name[:10]
+    YYYY_MM_DD = hdf5_file_name[:10]  #YYYY-MM-DD
+    recording_location = str(hdf5_file_name[-4])
+
+    # make output_dir_path if it doesn't exist
     output_dir_path = os.path.join(WORKING_DIR, YYYY_MM_DD + " PROCESSED")
     if not os.path.exists(output_dir_path):
         os.makedirs(output_dir_path)
 
-    file_name_start = os.path.join(output_dir_path, YYYY_MM_DD) #YYYY-MM-DD
+    file_name_start = os.path.join(output_dir_path, YYYY_MM_DD)
     
     # make output hdf5 file -- stores (vehicle_ID, lidar_signature) 
     # YYYY-MM-DD-HHMM_vehicles.h5
@@ -246,7 +249,9 @@ def process_files(hdf5_file_path, video_folder_path):
     
     # make output csv file -- (stores vehcile_ID, label)
     output_database_csv = open(file_name_start + "_vehicles.csv", 'a')
-    output_database_csv.write("vehicle_ID,label")
+
+    if(os.path.getsize(file_name_start + "_vehicles.csv") <= 0): # if csv file is empty, initialize it
+        output_database_csv.write("vehicle_ID,label")
     
     # get list of all the video file paths in order
     input_video_file_paths = get_video_files(video_folder_path)
@@ -294,8 +299,8 @@ def process_files(hdf5_file_path, video_folder_path):
                     # end vehicle and save everything
                     if(gap_count >= DETECTION_THRESHOLD):
                         
-                        vehicle_ID = current_vehicle_signature[0][-1] # get the timestamp of first vehicle measurement
-                        
+                        # vehicle_ID is the timestamp of first vehicle measurement concatenated with the recording location
+                        vehicle_ID = str(current_vehicle_signature[0][-1]) + recording_location
                         
                         
                         
@@ -328,7 +333,7 @@ def process_files(hdf5_file_path, video_folder_path):
                             
                             assert(success)
                             
-                            image_file_path = os.path.join(output_photo_folder_path, str(vehicle_ID) + "_" + str(frame))
+                            image_file_path = os.path.join(output_photo_folder_path, vehicle_ID + "_" + str(frame))
                             
                             try: # save photo
                                 cv2.imwrite(image_file_path  + IMAGE_SAVE_EXTENSION, image) 
@@ -357,16 +362,16 @@ def process_files(hdf5_file_path, video_folder_path):
                         
                         try: # to process and save current_vehicle_signature
                             processed_vehicle_signature = process_vehicle_signature(np.array(current_vehicle_signature))
-                            hdf5_output_file.create_dataset(str(vehicle_ID), data=processed_vehicle_signature)
+                            hdf5_output_file.create_dataset(vehicle_ID, data=processed_vehicle_signature)
                         except Exception as e:
-                            print("dataset " + str(vehicle_ID) + " cannot be created in file: " + hdf5_output_file.name)
+                            print("dataset " + vehicle_ID + " cannot be created in file: " + hdf5_output_file.name)
                             #print(repr(e))
                             raise e
                         
                         try: # to save vehicle_ID,vehicle label (timestamp of vehicle) to output_database_csv
-                            output_database_csv.write(str(vehicle_ID)+", -1")
+                            output_database_csv.write(vehicle_ID+", -1")
                         except Exception as e:
-                            print("could not write '" + str(vehicle_ID)+", -1' to csv file: " + output_database_csv.name)
+                            print("could not write '" + vehicle_ID+", -1' to csv file: " + output_database_csv.name)
                             #print(repr(e))
                             raise e
                         
@@ -388,7 +393,7 @@ def process_files(hdf5_file_path, video_folder_path):
     
 
 def to_ms(time):
-    """ convert YYYMMDDHHMMSSmmm to ms """
+    """ convert string 'YYYMMDDHHMMSSmmmX' to ms """
     
     return ms
 
