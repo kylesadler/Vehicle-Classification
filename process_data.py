@@ -64,13 +64,14 @@ import os
 from moviepy.editor import VideoFileClip
 
 
-WORKING_DIR = "." # where all the data is stored, if in same folder as this script, WORKING_DIR = "."
+WORKING_DIR = "."               # where all the data is stored, if in same folder as this script, WORKING_DIR = "."
 VID_FILE_EXTENSION = ".MTS"
-DETECTION_THRESHOLD = 10
+DETECTION_THRESHOLD = 10        # number of consecutive frames before recognizing vehicle
 IMAGE_SAVE_EXTENSION = ".jpg"
-FRAMES_PER_VEHICLE = 10
-SECONDS_PER_FRAME = .25 # number of seconds between frames
-EXPECTED_DISTANCE
+FRAMES_PER_VEHICLE = 10         # number of frames to save per vehicle
+SECONDS_PER_FRAME = .25         # number of seconds between frames
+MAX_DISTANCE_mm = 100           # max measuring distance
+MIN_DISTANCE_mm = 0             # min measuring distance
 
 
 def main():
@@ -89,8 +90,8 @@ def vehicle_detected(a, expected_points):
     """ a is a 1 x N numpy array. method returns true if there is a vehicle 
         expected_points is a 1 x N vector of the expected distance for each point
     """
-    # return true if at least 10% of the points are more than 10% away from the expected value
-    return (abs(a - expected_points) > expected_points * .10).sum() > a.size()*.10
+    # return true if at least 10% of the points are within MIN_DISTANCE_mm and MAX_DISTANCE_mm
+    return ((a > MIN_DISTANCE_mm) and (a < MAX_DISTANCE_mm)).sum() > a.size()*.10
 
 
     
@@ -265,7 +266,7 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
     """                               """
     """                               """
 
-    process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5)
+    process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, recording_location, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5)
     
     
     """                               """
@@ -277,7 +278,7 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
     output_database_csv.close()
     output_lidar_signature_hdf5.close()
 
-def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5):
+def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, recording_location, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5):
     """
         given:
             
