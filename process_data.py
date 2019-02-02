@@ -73,16 +73,6 @@ SECONDS_PER_FRAME = .25 # number of seconds between frames
 
 
 
-###  internal global variables ####
-
-current_video_index = 0
-current_timestamp_sec = 0
-
-###################################
-
-
-
-
 def main():
     
     folders_to_process = get_folders_to_process(WORKING_DIR) # get folders to process
@@ -204,8 +194,6 @@ def process_folder(folder):
         
 def process_files(hdf5_file_path, video_folder_path, video_start):
     """ 
-        SORRY FOR THE LONG FUNCTION, didn't want to copy lots of variables to sub functions
-    
         given:
         
             hdf5_file_path = WORKING_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMMX.h5 (X is recording location)
@@ -213,7 +201,7 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
             video_start is the time that the video starts using the lidars internal time (should be the correct time)
                                        
         
-        intermediate step:
+        run process_data with:
             
             input_lidar_data_hdf5
             input_lidar_data_keys      (sorted chronologically)
@@ -222,10 +210,6 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
             output_photo_folder_path
             output_lidar_signature_hdf5
         
-        output:
-            a populated hdf5_output_file with (vehicle_ID, processed lidar images)
-            a populated output_database_csv with (vehicle_ID,label)
-            photos of vehicles in output_photo_folder_path
     """
     
     
@@ -292,27 +276,49 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
     
 def advance_video(current_lidar_time, previous_lidar_time, current_video):
     """ advance videos by time_to_advance_sec seconds """
+    
+    try:
+        time_to_advance_sec = current_lidar_time - previous_lidar_time
+        
+        # while the time_to_advance is greater than the time left in current video
+        while(time_to_advance_sec > current_video.duration - current_timestamp_sec):
+            time_to_advance_sec -= current_video.duration - current_timestamp_sec
+            assert(time_to_advance_sec > 0)
+            current_video_index += 1
+            current_video = VideoFileClip(input_video_file_paths[current_video_index])
+            current_timestamp_sec = 0
+        
+        current_timestamp_sec += time_to_advance_sec
+    except Exeption as e: # if error, close and save everything
+        input_lidar_data_hdf5.close()
+        output_database_csv.close()
+        output_lidar_signature_hdf5.close()
+        raise Exception("could not open video file: " + current_video_index + " in folder " + video_folder_path)
 
-    time_to_advance_sec = current_lidar_time - previous_lidar_time
-    
-    # while the time_to_advance is greater than the time left in current video
-    while(time_to_advance_sec > current_video.duration - current_timestamp_sec):
-        time_to_advance_sec -= current_video.duration - current_timestamp_sec
-        assert(time_to_advance_sec > 0)
-        current_video_index += 1
-        current_video = VideoFileClip(input_video_file_paths[current_video_index])
-        current_timestamp_sec = 0
-    
-    current_timestamp_sec += time_to_advance_sec
-    
-    return current_video, current_timestamp_sec, current_lidar_time
+    return current_video, vehicle_video_timestamp, previous_lidar_timestamp, current_timestamp_sec, current_video_index
                         
 
 def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5):
+    """
+        given:
+            
+            input_lidar_data_hdf5
+            input_lidar_data_keys      (sorted chronologically)
+            input_video_file_paths     (sorted chronologically)
+            output_database_csv        
+            output_photo_folder_path
+            output_lidar_signature_hdf5
+        
     
+        output:
+            a populated hdf5_output_file with (vehicle_ID, processed lidar images)
+            a populated output_database_csv with (vehicle_ID,label)
+            photos of vehicles in output_photo_folder_path
+    """
     gap_count = 0                         # consecutive measurements between vehicle detections
     current_vehicle_signature = []
-
+    current_timestamp_sec = 0
+    current_video_index = 0
     current_video = VideoFileClip(input_video_file_paths[0])    # current_video
     previous_lidar_timestamp = to_sec(video_start)         # lidar internal time when video starts converted to seconds
 
@@ -343,14 +349,9 @@ def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_
                         
                         current_lidar_timestamp = to_sec(vehicle_ID[8:17]) # only pass in HHMMSSmmm (entire vehicle_ID is YYYYMMDDHHMMSSmmmX)
                         
-                        try: # find vehicle in videos
-                            current_video, vehicle_video_timestamp, previous_lidar_timestamp = advance_video(current_lidar_timestamp, previous_lidar_timestamp, current_video)
-            except Exeption as e: # if error, close and save everything
-                input_lidar_data_hdf5.close()
-                output_database_csv.close()
-                output_lidar_signature_hdf5.close()
-                raise Exception("could not open video file: " + current_video_index + " in folder " + video_folder_path)
-
+                        # find vehicle in videos
+                        current_video, vehicle_video_timestamp, previous_lidar_timestamp, current_timestamp_sec, current_video_index = advance_video(current_lidar_timestamp, previous_lidar_timestamp, current_video, current_timestamp_sec, current_video_index)
+                        
 
                         for frame in range(FAMES_PER_VEHICLE):
                     
@@ -358,28 +359,15 @@ def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_
                             image_file_path = os.path.join(output_photo_folder_path, vehicle_ID + "_" + str(frame) + IMAGE_SAVE_EXTENSION)
                             current_video.save_frame(image_file_path, t=vehicle_video_timestamp)
 
-                            try: # advance video by SECONDS_PER_FRAME seconds
-                                current_video, vehicle_video_timestamp, previous_lidar_timestamp = advance_video(previous_lidar_timestamp + SECONDS_PER_FRAME, previous_lidar_timestamp, current_video)
-                except Exeption as e: # if error, close and save everything
-                    input_lidar_data_hdf5.close()
-                    output_database_csv.close()
-                    output_lidar_signature_hdf5.close()
-                    raise Exception("could not open video file: " + current_video_index + " in folder " + video_folder_path)
+                            # advance video by SECONDS_PER_FRAME seconds
+                            current_video, vehicle_video_timestamp, previous_lidar_timestamp, current_timestamp_sec, current_video_index = advance_video(current_lidar_timestamp, previous_lidar_timestamp, current_video, current_timestamp_sec, current_video_index)
 
-                        try: # to process and save current_vehicle_signature
-                            processed_vehicle_signature = process_vehicle_signature(np.array(current_vehicle_signature))
-                            hdf5_output_file.create_dataset(vehicle_ID, data=processed_vehicle_signature)
-                        except Exception as e:
-                            print("dataset " + vehicle_ID + " cannot be created in file: " + hdf5_output_file.name)
-                            #print(repr(e))
-                            raise e
+                        processed_vehicle_signature = process_vehicle_signature(np.array(current_vehicle_signature))
+                        save_to_hdf5(hdf5_output_file, vehicle_ID, processed_vehicle_signature)
                         
-                        try: # to save vehicle_ID,vehicle label (timestamp of vehicle) to output_database_csv
-                            output_database_csv.write(vehicle_ID+", -1")
-                        except Exception as e:
-                            print("could not write '" + vehicle_ID+", -1' to csv file: " + output_database_csv.name)
-                            #print(repr(e))
-                            raise e
+                        save_to_csv(output_database_csv, vehicle_ID+", -1")
+                        
+                        
                         
                         current_vehicle_signature = []
                         gap_count = 0
@@ -394,6 +382,21 @@ def to_sec(time):
     sec = int(time[4:6]) + minutes*60
     return int(time[6:])/1000 + sec
     
+def save_to_hdf5(file, dset_name, dset_data):
+    try: # to save the dataset
+        file.create_dataset(dset_name, data=dset_data)
+    except Exception as e:
+        print("dataset " + dset_name + " cannot be created in file: " + file.name)
+        #print(repr(e))
+        raise e
+    
+def save_to_csv(file, string):
+    try: # to save vehicle_ID,vehicle label (timestamp of vehicle) to output_database_csv
+        file.write(string)
+    except Exception as e:
+        print("could not write '" +string +"' to csv file: " + file.name)
+        #print(repr(e))
+        raise e
 
 if __name__ == "__main__":
     main()
