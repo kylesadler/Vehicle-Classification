@@ -4,14 +4,16 @@
  lidar sensor outputs uncompressed data files named raw_data_XYZ.log where XYZ is a natural number with up to three digits.
  These files are originally stored in /raw_data.
  
- this program compresses these raw data files into a small number of hdf5 files in ascending order
+ this program compresses these raw data files into one hdf5 file (hdf5 files have no constraints on size)
  
- Lidar Files
+ Working_Directory
     --> raw_data
         --> raw_data_XYZ.log
+        --> ...
+        --> raw_data_XYZ.log
     
-    --> compressed_data
-        YYYY_MM_DD_HHMM.h5
+    --> YYYY-MM-DD UNPROCESSED
+        --> YYYY-MM-DD-HHMM{RECORDING_LOCATION}.h5
     
     --> compress_data.py
     
@@ -27,9 +29,10 @@ import numpy as np
 import h5py
 
 ###	params to configure	###
-INPUT_DIR = "raw_data"
-MIN_TO_SLEEP = 0.01;  # time to let files complete writing before processing, 2x lidar output interval suggested
-ERRORS_ONLY = False
+RECORDING_LOCATION = 0	# if unsure of your recording location number, talk to Dr. Hernandez
+INPUT_DIR = "raw_data"	# lidar outputs raw data files into this directory
+MIN_TO_SLEEP = 0.01; 	# time to let files complete writing before processing, 2x lidar output interval suggested
+ERRORS_ONLY = False	# prints and logs only errors (ignores warnings) if true
 ###################################
 
 
@@ -59,12 +62,13 @@ def main():
 
             
         files_to_compress.sort() # ensures that data is in correct order
-        dataset_name = get_name(files_to_compress[0])
+        dataset_name = get_name(files_to_compress[0]) # store each dataset as the earliest timestamp of the file batch
         compressed_data = [] # data for the entire loop of files
         files_to_delete =[]
         
         if(compressed_data_file_name == None):
-            compressed_data_file_name = dataset_name[:4]+"-"+dataset_name[4:6]+"-"+dataset_name[6:8]+"-"+dataset_name[8:-2]
+            # compressed_data_file_name is YYYY-MM-DD-HHMM{RECORDING_LOCATION}
+            compressed_data_file_name = dataset_name[:4]+"-"+dataset_name[4:6]+"-"+dataset_name[6:8]+"-"+dataset_name[8:-2]+str(RECORDING_LOCATION)
             OUTPUT_DIR = compressed_data_file_name[:10] +" UNPROCESSED"
             if not os.path.exists(OUTPUT_DIR): # make OUTPUT_DIR if it doesn't exist
                 os.makedirs(OUTPUT_DIR)

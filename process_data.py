@@ -20,11 +20,16 @@ This module:
     
     | --> data/
         | --> 2018-10-02 UNPROCESSED/
-             | --> 2018-10-02-1437.h5
+             |
+             | --> 2018-10-02-1437X.h5 (where X is RECORDING_LOCATION)
+             | --> ...
+             | --> 2018-10-02-1437X.h5 (where X is RECORDING_LOCATION)
+             |
              | --> 2018-10-02-1437_video/ (corresponding movie for each capture)
                  | --> 0000.mov
                  | --> 0001.mov
                  | --> 0002.mov
+                 | --> ...
         
     output:
     | --> 2018-10-02 PROCESSED/
