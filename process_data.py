@@ -71,7 +71,7 @@ IMAGE_SAVE_EXTENSION = ".jpg"
 FRAMES_PER_VEHICLE = 10
 VIDEO_START = "20190206133451672" # HHMMSSmmm of when the first video starts(according to lidar's clock)
 # we are processing many folders of data
-
+SECONDS_PER_FRAME = .25 # number of seconds between each frame
 
 
 
@@ -275,12 +275,12 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
     gap_count = 0 # consecutive measurements between vehicle detections
     current_vehicle_signature = []
 
-
-    current_video_index = 0
-    current_video = VideoFileClip(input_video_file_paths[current_video_index])
-    current_timestamp_sec = 0
+    current_video_index = 0							# index of current_video in input_video_file_paths
+    current_video = VideoFileClip(input_video_file_paths[current_video_index])	# current_video
+    current_timestamp_sec = 0 							# timestamp in current_video
+    
     # make sure about this
-    prev_time_sec = to_sec(video_start) # when the first video starts in ms relative to lidar sensors internal time
+    prev_time_sec = to_sec(video_start) # number of seconds the video is ahead of the lidar
 
     
     # loop through all keys, save timestamps in csv, save lidar signatures in hdf5
@@ -319,7 +319,7 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
                         time_to_advance_sec = current_time_sec - prev_time_sec # time to advance in videos
                         prev_time_sec = current_time_sec
                         
-                        # advance through the videos to find the correct one
+                        # advance through the videos to find the correct video
                         while(time_to_advance_sec > current_video.duration - current_timestamp_sec):
 
                             current_video_index+=1
@@ -335,25 +335,18 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
                             time_to_advance_sec -= (current_video.duration - current_timestamp_sec)
                             current_timestamp_sec = 0
 
+                        # current timestamp is now at time of vehicle
+                        current_timestamp_sec = time_to_advance_sec
 
-                        frame = 0
-                        success, image = current_video.read()
-
-                        while(frame < FRAMES_PER_VEHICLE):
-                            
-                            assert(success)
+                        for frame in range(FAMES_PER_VEHICLE):
                             
                             image_file_path = os.path.join(output_photo_folder_path, vehicle_ID + "_" + str(frame))
                             
                             try: # save photo
-                                current_video.save_frame(image_file_path  + IMAGE_SAVE_EXTENSION, time_to_advance_sec) 
-                            except:
+                                current_video.save_frame(image_file_path  + IMAGE_SAVE_EXTENSION, current_timestamp_sec + frame*SECONDS_PER_FRAME) 
+                            except: # if at end of one video, go to the start of the next
                                 print("could not save " + image_file_path + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
                             
-                            frame+=1
-                            
-                            # if at end of one video, go to the start of the next
-                            if(current_video.get(cv2.CV_CAP_PROP_FRAME_COUNT) == current_video.get(cv2.CV_CAP_PROP_POS_FRAMES)):
                                 current_video_index+=1
                                 
                                 try:
@@ -366,12 +359,8 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
                             
                                 current_timestamp_sec = 0
 
-                            
-                            success, image = current_video.read()
                         
                         
-                        # update variables
-                        current_timestamp_sec = current_video.get(cv2.CV_CAP_PROP_POS_MSEC)
 
                         
                         
@@ -418,12 +407,11 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
     
 
 def to_sec(time):
-    """ convert string 'HHMMSSmmm' to ms """
+    """ convert string 'HHMMSSmmm' to sec """
     hours = int(time[:2])
     minutes = int(time[2:4]) + hours*60
     sec = int(time[4:6]) + minutes*60
-    ms = int(time[6:]) + sec*1000
-    return ms
+    return int(time[6:])/1000 + sec
     
 
 def get_video_time_ms(video_cap):
