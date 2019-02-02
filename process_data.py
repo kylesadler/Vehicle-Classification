@@ -283,8 +283,7 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
     current_vehicle_signature = []
 
     current_video = VideoFileClip(input_video_file_paths[0])	# current_video
-    
-    previous_time_sec = to_sec(video_start) 			# lidar internal time when the video starts converted to seconds
+    previous_lidar_timestamp = to_sec(video_start) 		# lidar internal time when video starts converted to seconds
 
     
     # loop through all keys, save timestamps in csv, save lidar signatures in hdf5
@@ -325,12 +324,11 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
 
 
                         
-                        current_time_sec = to_sec(vehicle_ID[8:17]) # only pass in HHMMSSmmm (entire vehicle_ID is YYYYMMDDHHMMSSmmmX)
-                        time_to_advance_sec = current_time_sec - previous_time_sec # time to advance in videos
+                        vehicle_lidar_timestamp = to_sec(vehicle_ID[8:17]) # only pass in HHMMSSmmm (entire vehicle_ID is YYYYMMDDHHMMSSmmmX)
 
                         
                         try: # find vehicle in videos
-                            current_video, current_timestamp_sec = advance_video(time_to_advance_sec, current_video)
+                            current_video, vehicle_video_timestamp = advance_video(vehicle_lidar_timestamp - previous_lidar_timestamp, current_video)
 			except Exeption as e: # if error, close and save everything
 			    input_lidar_data_hdf5.close()
 			    output_database_csv.close()
@@ -342,11 +340,11 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
 		            
                             # save frame and update times
                             image_file_path = os.path.join(output_photo_folder_path, vehicle_ID + "_" + str(frame) + IMAGE_SAVE_EXTENSION)
-                            current_video.save_frame(image_file_path, t=current_timestamp_sec)
+                            current_video.save_frame(image_file_path, t=vehicle_video_timestamp)
 
                             try: # advance video by SECONDS_PER_FRAME seconds
-                                current_video, current_timestamp_sec = advance_video(SECONDS_PER_FRAME)
-                                previous_time_sec += SECONDS_PER_FRAME
+                                current_video, vehicle_video_timestamp = advance_video(SECONDS_PER_FRAME, current_video)
+                                previous_lidar_timestamp += SECONDS_PER_FRAME
 			    except Exeption as e: # if error, close and save everything
 			        input_lidar_data_hdf5.close()
 			        output_database_csv.close()
@@ -383,7 +381,6 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
                             #print(repr(e))
                             raise e
                         
-                        previous_time_sec = current_time_sec
                         current_vehicle_signature = []
                         gap_count = 0
 
