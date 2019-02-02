@@ -279,14 +279,14 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
     
     gap_count = 0 # consecutive measurements between vehicle detections
     current_vehicle_signature = []
+
     current_video_file_paths_index = 0
     current_video_capture = cv2.VideoCapture(input_video_file_paths[current_video_file_paths_index])
-    current_video_capture_total_frames = current_video_capture.get(cv2.CV_CAP_PROP_FRAME_COUNT)
-    current_video_capture_time = current_video_capture.get(cv2.CV_CAP_PROP_POS_MSEC)
-    
-    # make sure about these
-    prev_time_ms = to_ms(video_start) # when the first video starts in ms relative to lidar sensors internal time
     time_left_in_current_video_ms = get_video_time_ms(current_video_capture)
+
+    # make sure about this
+    prev_time_ms = to_ms(video_start) # when the first video starts in ms relative to lidar sensors internal time
+
     
     # loop through all keys, save timestamps in csv, save lidar signatures in hdf5
     for key in input_lidar_data_keys:
@@ -328,14 +328,13 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
 
                             try:
                                 current_video_capture = cv2.VideoCapture(input_video_file_paths[current_video_file_paths_index])
-                            except Exeption as e: # if an error, close and save everything
+                            except Exeption as e: # if error, close and save everything
                                 current_video_capture.release()
                                 input_lidar_data_hdf5.close()
                                 output_database_csv.close()
                                 output_lidar_signature_hdf5.close()
-                                raise e
-
-                            current_video_capture_total_frames = current_video_capture.get(cv2.CV_CAP_PROP_FRAME_COUNT)
+                                raise Exception("could not open video file: " + current_video_file_paths_index + " in folder " + video_folder_path)
+                            
                             time_left_in_current_video_ms = get_video_time_ms(current_video_capture)
                             
 
@@ -365,14 +364,20 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
                             frame+=1
                             
                             # if at end of one video, go to the start of the next
-                            if(current_video_capture_total_frames == current_video_capture.get(cv2.CV_CAP_PROP_POS_FRAMES)):
+                            if(current_video_capture.get(cv2.CV_CAP_PROP_FRAME_COUNT) == current_video_capture.get(cv2.CV_CAP_PROP_POS_FRAMES)):
                                 current_video_capture.release()
                                 current_video_file_paths_index+=1
                                 
-                                # maybe make this a try/except
-                                current_video_capture = cv2.VideoCapture(input_video_file_paths[current_video_file_paths_index])
-                                current_video_capture_total_frames = current_video_capture.get(cv2.CV_CAP_PROP_FRAME_COUNT)
-                                time_left_in_current_video_ms = get_video_time_ms(current_video_capture)
+                                try:
+                                    current_video_capture = cv2.VideoCapture(input_video_file_paths[current_video_file_paths_index])
+                                except Exeption as e: # if an error, close and save everything
+                                    current_video_capture.release()
+                                    input_lidar_data_hdf5.close()
+                                    output_database_csv.close()
+                                    output_lidar_signature_hdf5.close()
+                                    raise Exception("could not open video file: " + current_video_file_paths_index + " in folder " + video_folder_path)
+                            
+                            time_left_in_current_video_ms = get_video_time_ms(current_video_capture)
                             
                             success, image = vidcap.read()
                         
