@@ -192,13 +192,9 @@ def process_folder(folder):
         video_folder = file_pair[0]  
         hdf5_file = file_pair[1]  
         
-        vid_strt = input("enter video start time for "+video_folder+" in HHMMSSmmm form:")
-        MAX_DISTANCE_mm = input("enter max distance for "+video_folder+" in mm:")
-        MIN_DISTANCE_mm = input("enter max distance for "+video_folder+" in mm:")
-
-        process_files(hdf5_file, video_folder, vid_strt, MIN_DISTANCE_mm, MAX_DISTANCE_mm)
+        process_files(hdf5_file, video_folder)
         
-def process_files(hdf5_file_path, video_folder_path, video_start):
+def process_files(hdf5_file_path, video_folder_path):
     """ 
         given:
         
@@ -268,7 +264,7 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
     """                               """
     """                               """
 
-    process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, recording_location, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5, MIN_DISTANCE_mm, MAX_DISTANCE_mm)
+    process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, recording_location, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5)
     
     
     """                               """
@@ -280,7 +276,7 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
     output_database_csv.close()
     output_lidar_signature_hdf5.close()
 
-def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, recording_location, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5, MIN_DISTANCE_mm, MAX_DISTANCE_mm):
+def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, recording_location, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5):
     """
         given:
             
@@ -297,6 +293,13 @@ def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_
             a populated output_database_csv with (vehicle_ID,label)
             photos of vehicles in output_photo_folder_path
     """
+    
+    video_start = input("enter video start time for "+video_folder+" in HHMMSSmmm form:")
+    MAX_DISTANCE_mm = input("enter max distance for "+video_folder+" in mm:")
+    MIN_DISTANCE_mm = input("enter max distance for "+video_folder+" in mm:")
+
+    
+    
     gap_count = 0                         # consecutive measurements between vehicle detections
     current_vehicle_signature = []
     
