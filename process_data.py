@@ -282,6 +282,7 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
 
     current_video_file_paths_index = 0
     current_video_capture = cv2.VideoCapture(input_video_file_paths[current_video_file_paths_index])
+    timestamp_current_video_ms = 0
     time_left_in_current_video_ms = get_video_time_ms(current_video_capture)
 
     # make sure about this
@@ -322,7 +323,7 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
                         
                         # advance through the videos to find the correct one
                         while(time_to_advance_ms > time_left_in_current_video_ms):
-                            time_to_advance-=time_left_in_current_video_ms
+                            time_to_advance -= time_left_in_current_video_ms
                             current_video_capture.release()
                             current_video_file_paths_index+=1
 
@@ -335,14 +336,17 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
                                 output_lidar_signature_hdf5.close()
                                 raise Exception("could not open video file: " + current_video_file_paths_index + " in folder " + video_folder_path)
                             
+                            timestamp_current_video_ms = 0
                             time_left_in_current_video_ms = get_video_time_ms(current_video_capture)
+
                             
 
 
                         # go to correct time in correct video
                         current_video_capture_time = current_video_capture.get(cv2.CV_CAP_PROP_POS_MSEC)
                         assert(current_video_capture.set(cv2.CV_CAP_PROP_POS_MSEC, current_video_capture_time + time_to_advance_ms))
-                        time_left_in_current_video_ms-=time_to_advance_ms
+                        time_left_in_current_video_ms -= time_to_advance_ms
+                        timestamp_current_video_ms += time_to_advance_ms
                         assert(time_left_in_current_video_ms >= 0)
                            
                         
@@ -377,13 +381,16 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
                                     output_lidar_signature_hdf5.close()
                                     raise Exception("could not open video file: " + current_video_file_paths_index + " in folder " + video_folder_path)
                             
+                            timestamp_current_video_ms = 0
                             time_left_in_current_video_ms = get_video_time_ms(current_video_capture)
+
                             
                             success, image = vidcap.read()
                         
                         
-                        
-                        
+                        # update variables
+                        current_video_capture_time = current_video_capture.get(cv2.CV_CAP_PROP_POS_MSEC)
+                        time_left_in_current_video_ms = get_video_time_ms(current_video_capture) - current_video_capture_time
                         
                         
                         
