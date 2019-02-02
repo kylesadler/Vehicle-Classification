@@ -280,7 +280,7 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
     current_timestamp_sec = 0 							# timestamp in current_video
     
     # make sure about this
-    prev_time_sec = to_sec(video_start) # number of seconds the video is ahead of the lidar
+    prev_time_sec = to_sec(video_start) # time when the video starts converted to seconds
 
     
     # loop through all keys, save timestamps in csv, save lidar signatures in hdf5
@@ -340,24 +340,27 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
 
                         for frame in range(FAMES_PER_VEHICLE):
                             
+                            # if not within current video, update current_video
+		            if(current_video.duration < current_timestamp_sec + frame*SECONDS_PER_FRAME):
+		                current_video_index+=1
+		                
+		                try:
+		                    current_video = VideoFileClip(input_video_file_paths[current_video_index])
+		                except Exeption as e: # if an error, close and save everything
+		                    input_lidar_data_hdf5.close()
+		                    output_database_csv.close()
+		                    output_lidar_signature_hdf5.close()
+		                    raise Exception("could not open video file: " + current_video_index + " in folder " + video_folder_path)
+		            
+		                current_timestamp_sec = 0
+
+
+                            # save frame and update times
                             image_file_path = os.path.join(output_photo_folder_path, vehicle_ID + "_" + str(frame))
-                            
-                            try: # save photo
-                                current_video.save_frame(image_file_path  + IMAGE_SAVE_EXTENSION, current_timestamp_sec + frame*SECONDS_PER_FRAME) 
-                            except: # if at end of one video, go to the start of the next
-                                print("could not save " + image_file_path + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
-                            
-                                current_video_index+=1
-                                
-                                try:
-                                    current_video = VideoFileClip(input_video_file_paths[current_video_index])
-                                except Exeption as e: # if an error, close and save everything
-                                    input_lidar_data_hdf5.close()
-                                    output_database_csv.close()
-                                    output_lidar_signature_hdf5.close()
-                                    raise Exception("could not open video file: " + current_video_index + " in folder " + video_folder_path)
-                            
-                                current_timestamp_sec = 0
+                            prev_time_sec += SECONDS_PER_FRAME
+		            current_timestamp_sec += SECONDS_PER_FRAME
+                            current_video.save_frame(image_file_path  + IMAGE_SAVE_EXTENSION, t=current_timestamp_sec)
+
 
                         
                         
