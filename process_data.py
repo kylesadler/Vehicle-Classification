@@ -70,9 +70,8 @@ DETECTION_THRESHOLD = 10        # number of consecutive frames before recognizin
 IMAGE_SAVE_EXTENSION = ".jpg"
 FRAMES_PER_VEHICLE = 10         # number of frames to save per vehicle
 SECONDS_PER_FRAME = .25         # number of seconds between frames
-MAX_DISTANCE_mm = 100           # max measuring distance
-MIN_DISTANCE_mm = 0             # min measuring distance
 
+""" TODO make parameters.txt file for each folder's video start time, min distance, and max distance """
 
 def main():
     
@@ -86,7 +85,7 @@ def normalize_vehicle(v):
     return (v - np.min(v))/np.ptp(v)
 
 
-def vehicle_detected(a, expected_points):
+def vehicle_detected(a, MIN_DISTANCE_mm, MAX_DISTANCE_mm):
     """ a is a 1 x N numpy array. method returns true if there is a vehicle 
         expected_points is a 1 x N vector of the expected distance for each point
     """
@@ -194,7 +193,10 @@ def process_folder(folder):
         hdf5_file = file_pair[1]  
         
         vid_strt = input("enter video start time for "+video_folder+" in HHMMSSmmm form:")
-        process_files(hdf5_file, video_folder, vid_strt)
+        MAX_DISTANCE_mm = input("enter max distance for "+video_folder+" in mm:")
+        MIN_DISTANCE_mm = input("enter max distance for "+video_folder+" in mm:")
+
+        process_files(hdf5_file, video_folder, vid_strt, MIN_DISTANCE_mm, MAX_DISTANCE_mm)
         
 def process_files(hdf5_file_path, video_folder_path, video_start):
     """ 
@@ -266,7 +268,7 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
     """                               """
     """                               """
 
-    process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, recording_location, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5)
+    process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, recording_location, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5, MIN_DISTANCE_mm, MAX_DISTANCE_mm)
     
     
     """                               """
@@ -278,7 +280,7 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
     output_database_csv.close()
     output_lidar_signature_hdf5.close()
 
-def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, recording_location, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5):
+def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, recording_location, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5, MIN_DISTANCE_mm, MAX_DISTANCE_mm):
     """
         given:
             
@@ -309,7 +311,7 @@ def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_
         for lidar_measurement in np.array(input_lidar_data_hdf5.get(key)):
             
             # if there is a vehicle in the current frame, save it to current_vehicle_signature
-            if(vehicle_detected(lidar_measurement)):
+            if(vehicle_detected(lidar_measurement, MIN_DISTANCE_mm, MAX_DISTANCE_mm)):
                 current_vehicle_signature.add(lidar_measurement)
                 gap_count = 0
             else:
