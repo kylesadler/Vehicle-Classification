@@ -23,9 +23,15 @@ This module:
              |
              | --> 2018-10-02-1437X.h5 (where X is RECORDING_LOCATION)
              | --> ...
-             | --> 2018-10-02-1437X.h5 (where X is RECORDING_LOCATION)
+             | --> 2018-10-02-HHMMX.h5 (where X is RECORDING_LOCATION)
              |
-             | --> 2018-10-02-1437_video/ (corresponding movie for each capture)
+             | --> 2018-10-02-1437X_video/ (corresponding movie for each capture)
+                 | --> 0000.mov
+                 | --> 0001.mov
+                 | --> 0002.mov
+                 | --> ...
+             | --> ...
+             | --> 2018-10-02-HHMMX_video/ (corresponding movie for each capture)
                  | --> 0000.mov
                  | --> 0001.mov
                  | --> 0002.mov
@@ -68,7 +74,8 @@ VID_FILE_EXTENSION = ".MTS"
 DETECTION_THRESHOLD = 10
 IMAGE_SAVE_EXTENSION = ".jpg"
 FRAMES_PER_VEHICLE = 10
-VIDEO_OFFSET # YYYYMMDDHHMMSSmmm (according to lidar's clock)
+VIDEO_START = "20190206133451672" # YYYYMMDDHHMMSSmmm of when the first video starts(according to lidar's clock)
+# we are processing many folders of data
 
 
 
@@ -132,7 +139,7 @@ def get_file_pairs(root):
     for vid_dir in vid_dirs:
         for hf in hdf5_files:
             try:
-                if(vid_dir[:15] == hf[:15]): # if YYYY-MM-DD-HHMM matches on filenames (first 15 chars)
+                if(vid_dir[:16] == hf[:16]): # if YYYY-MM-DD-HHMMX matches on filenames (first 16 chars)
                     file_pairs.append([vid_dir, hf])
             except:
                 pass
@@ -172,26 +179,25 @@ def process_folder(folder):
     """ given folder =  WORKING_DIR//YYYY-MM-DD UNPROCESSED//
     
     | --> 2018-10-02 UNPROCESSED/
-             | --> 2018-10-02-1437.h5
-             | --> 2018-10-02-1437_video/ (corresponding movie for each capture)
+             | --> 2018-10-02-1437X.h5
+             | --> 2018-10-02-1437X_video/ (corresponding movie for each capture)
                  | --> 0000.mov
                  | --> 0001.mov
                  | --> 0002.mov
         
     output:
     | --> 2018-10-02 PROCESSED/
-        | --> 2018-10-02-1437_vehicles.h5 (vehicle_ID, video_frames, processed lidar image tuples)
+        | --> 2018-10-02_vehicles.h5 (vehicle_ID, video_frames, processed lidar image tuples)
     
     """
     # for multiple collections on the same date
-    file_pairs = get_file_pairs(folder) # files[data_collection_num][file_type: 0 = video_dir, 1 = hdf5_files]
+    file_pairs = get_file_pairs(folder) # files[data_collection_num][file_type: 0 = video_dir, 1 = hdf5_file]
     
     for file_pair in file_pairs:
         video_folder = file_pair[0]  
-        hdf5_files = file_pair[1]  
+        hdf5_file = file_pair[1]  
         
-	for hf in hdf5_files:
-            process_files(hf, video_folder)
+        process_files(hdf5_file, video_folder)
         
 def process_files(hdf5_file_path, video_folder_path):
     """ 
@@ -278,7 +284,7 @@ def process_files(hdf5_file_path, video_folder_path):
     current_video_capture_time = current_video_capture.get(cv2.CV_CAP_PROP_POS_MSEC)
     
     # make sure about these
-    prev_time_ms = to_ms(VIDEO_OFFSET) # when the first video starts in ms relative to lidar sensors internal time
+    prev_time_ms = to_ms(VIDEO_START) # when the first video starts in ms relative to lidar sensors internal time
     time_left_in_current_video_ms = get_video_time_ms(current_video_capture)
     
     # loop through all keys, save timestamps in csv, save lidar signatures in hdf5
