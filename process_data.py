@@ -190,14 +190,15 @@ def process_folder(folder):
         video_folder = file_pair[0]  
         hdf5_files = file_pair[1]  
         
-        process_files(hdf5_files, video_folder, WORKING_DIR)
+	for hf in hdf5_files:
+            process_files(hf, video_folder, WORKING_DIR)
         
 def process_files(hdf5_file_path, video_folder_path, output_dir):
     """ 
         SORRY FOR THE LONG FUNCTION, didn't want to copy lots of variables to sub functions
     
         given paths to corresponding hdf5 file and video folder
-        hdf5_file_paths = [WORKING_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMMX.h5, ...] (X is recording location)
+        hdf5_file_path = WORKING_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMMX.h5 (X is recording location)
         video_folder_path = WORKING_DIR//YYYY-MM-DD UNPROCESSED//YYYY-MM-DD-HHMM_video
         
                                        
@@ -232,7 +233,8 @@ def process_files(hdf5_file_path, video_folder_path, output_dir):
         os.makedirs(output_dir_path)
     
     # make output hdf5 file -- stores (vehicle_ID, lidar_signature) 
-    output_lidar_signature_hdf5 = h5py.File(os.path.join(output_dir_path, hdf5_file_name[:-3]+"_vehicles.h5"), 'a')
+    # YYYY-MM-DD-HHMM_vehicles.h5
+    output_lidar_signature_hdf5 = h5py.File(os.path.join(output_dir_path, hdf5_file_name[:-4]+"_vehicles.h5"), 'a')
     
     # open input hdf5 file -- stores compressed lidar data
     input_lidar_data_hdf5 = h5py.File(hdf5_file_path, 'r')
