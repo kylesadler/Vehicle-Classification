@@ -74,7 +74,7 @@ VID_FILE_EXTENSION = ".MTS"
 DETECTION_THRESHOLD = 10
 IMAGE_SAVE_EXTENSION = ".jpg"
 FRAMES_PER_VEHICLE = 10
-VIDEO_START = "20190206133451672" # YYYYMMDDHHMMSSmmm of when the first video starts(according to lidar's clock)
+VIDEO_START = "20190206133451672" # HHMMSSmmm of when the first video starts(according to lidar's clock)
 # we are processing many folders of data
 
 
@@ -197,7 +197,7 @@ def process_folder(folder):
         video_folder = file_pair[0]  
         hdf5_file = file_pair[1]  
         
-        vid_strt = input("enter video start time for "+video_folder+" in YYYYMMDDHHMMSSmmm form:
+        vid_strt = input("enter video start time for "+video_folder+" in HHMMSSmmm form:")
         process_files(hdf5_file, video_folder, vid_strt)
         
 def process_files(hdf5_file_path, video_folder_path, video_start):
@@ -316,7 +316,7 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
                         
                         
                         
-                        current_time_ms = to_ms(vehicle_ID)
+                        current_time_ms = to_ms(vehicle_ID[8:17]) # only pass in HHMMSSmmm (entire vehicle_ID is YYYYMMDDHHMMSSmmmX)
                         time_to_advance_ms = current_time_ms - prev_time_ms # time to advance in videos
                         prev_time_ms = current_time_ms
                         
@@ -416,11 +416,16 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
     
 
 def to_ms(time):
-    """ convert string 'YYYMMDDHHMMSSmmmX' to ms """
-    return int(time[:13])
+    """ convert string 'HHMMSSmmm' to ms """
+    hours = int(time[:2])
+    minutes = int(time[2:4]) + hours*60
+    sec = int(time[4:6]) + minutes*60
+    ms = int(time[6:]) + sec*1000
+    return ms
     
 
 def get_video_time_ms(video_cap):
+    """ return the length of video_cap in ms """
     pass
 
 if __name__ == "__main__":
