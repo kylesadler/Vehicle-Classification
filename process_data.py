@@ -280,7 +280,7 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
     current_timestamp_sec = 0 							# timestamp in current_video
     
     # make sure about this
-    prev_time_sec = to_sec(video_start) # time when the video starts converted to seconds
+    previous_time_sec = to_sec(video_start) # time when the video starts converted to seconds
 
     
     # loop through all keys, save timestamps in csv, save lidar signatures in hdf5
@@ -316,50 +316,46 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
 
                         
                         current_time_sec = to_sec(vehicle_ID[8:17]) # only pass in HHMMSSmmm (entire vehicle_ID is YYYYMMDDHHMMSSmmmX)
-                        time_to_advance_sec = current_time_sec - prev_time_sec # time to advance in videos
-                        prev_time_sec = current_time_sec
+                        time_to_advance_sec = current_time_sec - previous_time_sec # time to advance in videos
+                        previous_time_sec = current_time_sec
                         
                         # advance through the videos to find the correct video
                         while(time_to_advance_sec > current_video.duration - current_timestamp_sec):
-
-                            current_video_index+=1
-
                             try:
+                                time_to_advance_sec -= (current_video.duration - current_timestamp_sec)
+                                assert(time_to_advance_sec > 0)
+                                current_video_index += 1
                                 current_video = VideoFileClip(input_video_file_paths[current_video_index])
+                                current_timestamp_sec = 0
                             except Exeption as e: # if error, close and save everything
                                 input_lidar_data_hdf5.close()
                                 output_database_csv.close()
                                 output_lidar_signature_hdf5.close()
                                 raise Exception("could not open video file: " + current_video_index + " in folder " + video_folder_path)
 
-                            time_to_advance_sec -= (current_video.duration - current_timestamp_sec)
-                            current_timestamp_sec = 0
-
                         # current timestamp is now at time of vehicle
                         current_timestamp_sec = time_to_advance_sec
 
                         for frame in range(FAMES_PER_VEHICLE):
+		            
+                            # save frame and update times
+                            image_file_path = os.path.join(output_photo_folder_path, vehicle_ID + "_" + str(frame) + IMAGE_SAVE_EXTENSION)
+                            current_video.save_frame(image_file_path, t=current_timestamp_sec)
+                            previous_time_sec += SECONDS_PER_FRAME
+		            current_timestamp_sec += SECONDS_PER_FRAME
+
                             
-                            # if not within current video, update current_video
-		            if(current_video.duration < current_timestamp_sec + frame*SECONDS_PER_FRAME):
-		                current_video_index+=1
-		                
+                            # if new timestamp not within current video, go to next video
+		            if(current_video.duration < current_timestamp_sec):
 		                try:
+                                    current_video_index += 1
 		                    current_video = VideoFileClip(input_video_file_paths[current_video_index])
+		                    current_timestamp_sec = 0
 		                except Exeption as e: # if an error, close and save everything
 		                    input_lidar_data_hdf5.close()
 		                    output_database_csv.close()
 		                    output_lidar_signature_hdf5.close()
 		                    raise Exception("could not open video file: " + current_video_index + " in folder " + video_folder_path)
-		            
-		                current_timestamp_sec = 0
-
-
-                            # save frame and update times
-                            image_file_path = os.path.join(output_photo_folder_path, vehicle_ID + "_" + str(frame))
-                            prev_time_sec += SECONDS_PER_FRAME
-		            current_timestamp_sec += SECONDS_PER_FRAME
-                            current_video.save_frame(image_file_path  + IMAGE_SAVE_EXTENSION, t=current_timestamp_sec)
 
 
                         
@@ -416,18 +412,6 @@ def to_sec(time):
     sec = int(time[4:6]) + minutes*60
     return int(time[6:])/1000 + sec
     
-
-def get_video_time_ms(video_cap):
-    """ return the length of video_cap in ms """
-    current_time = video_cap.get(cv2.CV_CAP_PROP_POS_MSEC)
-    tot_frames = video_cap.get(cv2.CV_CAP_PROP_FRAME_COUNT)
-    video_cap.set(cv2.CV_CAP_PROP_FRAME_COUNT, tot_frames)
-
-    length = video_cap.get(cv2.CV_CAP_PROP_POS_MSEC)
-    video_cap.set(cv2.CV_CAP_PROP_POS_MSEC, current_time)
-
-    return length
-
 
 if __name__ == "__main__":
     main()
