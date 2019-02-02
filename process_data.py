@@ -321,11 +321,20 @@ def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_
                         
                         # vehicle_ID is the timestamp of first vehicle measurement concatenated with the recording location
                         vehicle_ID = str(current_vehicle_signature[0][-1]) + recording_location
-        
-                        vid_parse.save_vehicle_images(vehicle_ID)
-                        processed_vehicle_signature = process_vehicle_signature(np.array(current_vehicle_signature))
-                        save_to_hdf5(hdf5_output_file, vehicle_ID, processed_vehicle_signature)
-                        save_to_csv(output_database_csv, vehicle_ID+", -1")
+                        try:
+                            vid_parse.save_vehicle_images(vehicle_ID)
+                            processed_vehicle_signature = process_vehicle_signature(np.array(current_vehicle_signature))
+                            save_to_hdf5(hdf5_output_file, vehicle_ID, processed_vehicle_signature)
+                            save_to_csv(output_database_csv, vehicle_ID+", -1")
+                        
+                        except:
+                            input_lidar_data_hdf5.close()
+                            output_database_csv.close()
+                            output_lidar_signature_hdf5.close()
+                            raise Exception("could not save vehicle: " + vehicle_ID)
+    
+    
+
                         
                         current_vehicle_signature = []
                         gap_count = 0
@@ -367,24 +376,24 @@ class video_parser:
     def __init__(self, in_paths, out_path, time_stamp):
         self.input_video_file_paths = in_paths
         self.output_photo_folder_path = out_path
-        self.current_timestamp_sec = 0
+        self.video_timestamp = 0 # stores the timestamp in 
         self.video_index = 0
-        self.video = VideoFileClip(self.input_video_file_paths[0])    # video
-        self.absolute_time = time_stamp
+        self.video = VideoFileClip(self.input_video_file_paths[0])    # current video
+        self.absolute_time = time_stamp # stores the absolute time
     
     
     
     def save_vehicle_images(vehicle_ID):
-        """  """
+        """ save vehicle frames """
         
-        # set self.current_timestamp_sec to the specified time
+        # set self.video_timestamp to the specified time
         self.advance_video_to(to_absolute_sec(vehicle_ID[8:17])) # to_absolute_sec('HHMMSSmmm') (entire vehicle_ID is YYYYMMDDHHMMSSmmmX)
     
         for frame in range(FAMES_PER_VEHICLE):
     
             # save frame and update times
             image_file_path = os.path.join(self.output_photo_folder_path, vehicle_ID + "_" + str(frame) + IMAGE_SAVE_EXTENSION)
-            self.video.save_frame(image_file_path, t=self.current_timestamp_sec)
+            self.video.save_frame(image_file_path, t=self.video_timestamp)
     
             # advance video by SECONDS_PER_FRAME seconds
             self.advance_video_to(self.absolute_time + SECONDS_PER_FRAME)
@@ -393,29 +402,21 @@ class video_parser:
         
         
         
-    def advance_video_to(self, absolute_time):
+    def advance_video_to(self, new_time): # throws an exception
         """ advance video to specified absolute timestamp """
         # find vehicle in videos
-        try:
-            time_to_advance = absolute_time - self.absolute_time
-            
-            # while the time_to_advance is greater than the time left in current video
-            while(time_to_advance > current_video.duration - self.current_timestamp_sec):
-                time_to_advance -= current_video.duration - self.current_timestamp_sec
-                assert(time_to_advance > 0)
-                self.video_index += 1
-                self.video = VideoFileClip(self.input_video_file_paths[self.video_index])
-                self.current_timestamp_sec = 0
-            
-            self.current_timestamp_sec += time
-            
-        except Exeption as e: # if error, close and save everything
-            input_lidar_data_hdf5.close()
-            output_database_csv.close()
-            output_lidar_signature_hdf5.close()
-            raise Exception("could not open video file: " + str(video_index) + " in folder " + video_folder_path)
-    
-    
+        time_to_advance = new_time - self.absolute_time
+        self.absolute_time = new_time
+        # while the time_to_advance is greater than the time left in current video
+        while(time_to_advance > current_video.duration - self.video_timestamp):
+            time_to_advance -= current_video.duration - self.video_timestamp
+            assert(time_to_advance > 0)
+            self.video_index += 1
+            self.video = VideoFileClip(self.input_video_file_paths[self.video_index])
+            self.video_timestamp = 0
+        
+        self.video_timestamp += time
 
+          
     
     
