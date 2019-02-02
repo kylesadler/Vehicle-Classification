@@ -90,8 +90,8 @@ def vehicle_detected(a, expected_points):
     """ a is a 1 x N numpy array. method returns true if there is a vehicle 
         expected_points is a 1 x N vector of the expected distance for each point
     """
-    # return true if at least 10% of the points are within MIN_DISTANCE_mm and MAX_DISTANCE_mm
-    return ((a > MIN_DISTANCE_mm) and (a < MAX_DISTANCE_mm)).sum() > a.size()*.10
+    # return true if more 50% of the points are within MIN_DISTANCE_mm and MAX_DISTANCE_mm
+    return ((a > MIN_DISTANCE_mm) and (a < MAX_DISTANCE_mm)).sum() > a.size()*.5
 
 
     
@@ -297,7 +297,6 @@ def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_
     """
     gap_count = 0                         # consecutive measurements between vehicle detections
     current_vehicle_signature = []
-    median_points = [] # TODO generate median points
     
     # video_start is string 'HHMMSSmmm' when the video starts according to the lidar
     vid_parse = video_parser(input_video_file_paths, output_photo_folder_path, video_start)
@@ -310,7 +309,7 @@ def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_
         for lidar_measurement in np.array(input_lidar_data_hdf5.get(key)):
             
             # if there is a vehicle in the current frame, save it to current_vehicle_signature
-            if(vehicle_detected(lidar_measurement, median_points)):
+            if(vehicle_detected(lidar_measurement)):
                 current_vehicle_signature.add(lidar_measurement)
                 gap_count = 0
             else:
