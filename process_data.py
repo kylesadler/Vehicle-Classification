@@ -278,11 +278,9 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
 
     current_video_index = 0
     current_video = VideoFileClip(input_video_file_paths[current_video_index])
-    timestamp_current_video_ms = 0
-    time_left_in_current_video_ms = current_video.duration
-
+    current_timestamp_sec = 0
     # make sure about this
-    prev_time_ms = to_ms(video_start) # when the first video starts in ms relative to lidar sensors internal time
+    prev_time_sec = to_sec(video_start) # when the first video starts in ms relative to lidar sensors internal time
 
     
     # loop through all keys, save timestamps in csv, save lidar signatures in hdf5
@@ -317,40 +315,27 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
 
 
                         
-                        current_time_ms = to_ms(vehicle_ID[8:17]) # only pass in HHMMSSmmm (entire vehicle_ID is YYYYMMDDHHMMSSmmmX)
-                        time_to_advance_ms = current_time_ms - prev_time_ms # time to advance in videos
-                        prev_time_ms = current_time_ms
+                        current_time_sec = to_sec(vehicle_ID[8:17]) # only pass in HHMMSSmmm (entire vehicle_ID is YYYYMMDDHHMMSSmmmX)
+                        time_to_advance_sec = current_time_sec - prev_time_sec # time to advance in videos
+                        prev_time_sec = current_time_sec
                         
                         # advance through the videos to find the correct one
-                        while(time_to_advance_ms > time_left_in_current_video_ms):
+                        while(time_to_advance_sec > current_video.duration - current_timestamp_sec):
 
                             current_video_index+=1
 
                             try:
                                 current_video = VideoFileClip(input_video_file_paths[current_video_index])
                             except Exeption as e: # if error, close and save everything
-                                current_video.release()
                                 input_lidar_data_hdf5.close()
                                 output_database_csv.close()
                                 output_lidar_signature_hdf5.close()
                                 raise Exception("could not open video file: " + current_video_index + " in folder " + video_folder_path)
 
-                            time_to_advance_ms -= time_left_in_current_video_ms                            
-                            timestamp_current_video_ms = 0
-                            time_left_in_current_video_ms = current_video.duration
+                            time_to_advance_sec -= (current_video.duration - current_timestamp_sec)
+                            current_timestamp_sec = 0
 
 
-                        # go to correct time in correct video
-                        current_video_capture_time = current_video.get(cv2.CV_CAP_PROP_POS_MSEC)
-                        assert(current_video.set(cv2.CV_CAP_PROP_POS_MSEC, current_video_capture_time + time_to_advance_ms))
-                        
-                        timestamp_current_video_ms = current_video.get(cv2.CV_CAP_PROP_POS_MSEC)
-                        time_left_in_current_video_ms = current_video.duration - timestamp_current_video_ms
-
-                        assert(time_left_in_current_video_ms >= 0)
-                           
-                        
-                        # video is at correct time
                         frame = 0
                         success, image = current_video.read()
 
@@ -361,7 +346,7 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
                             image_file_path = os.path.join(output_photo_folder_path, vehicle_ID + "_" + str(frame))
                             
                             try: # save photo
-                                current_video.save_frame(image_file_path  + IMAGE_SAVE_EXTENSION, image) 
+                                current_video.save_frame(image_file_path  + IMAGE_SAVE_EXTENSION, time_to_advance_sec) 
                             except:
                                 print("could not save " + image_file_path + IMAGE_SAVE_EXTENSION + " in folder " + output_photo_folder_path)
                             
@@ -379,16 +364,14 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
                                     output_lidar_signature_hdf5.close()
                                     raise Exception("could not open video file: " + current_video_index + " in folder " + video_folder_path)
                             
-                                timestamp_current_video_ms = 0
-                                time_left_in_current_video_ms = current_video.duration
+                                current_timestamp_sec = 0
 
                             
                             success, image = current_video.read()
                         
                         
                         # update variables
-                        timestamp_current_video_ms = current_video.get(cv2.CV_CAP_PROP_POS_MSEC)
-                        time_left_in_current_video_ms = current_video.duration - timestamp_current_video_ms
+                        current_timestamp_sec = current_video.get(cv2.CV_CAP_PROP_POS_MSEC)
 
                         
                         
@@ -434,7 +417,7 @@ def process_files(hdf5_file_path, video_folder_path, video_start):
     output_lidar_signature_hdf5.close()
     
 
-def to_ms(time):
+def to_sec(time):
     """ convert string 'HHMMSSmmm' to ms """
     hours = int(time[:2])
     minutes = int(time[2:4]) + hours*60
