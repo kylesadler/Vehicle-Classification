@@ -83,6 +83,10 @@ def main():
         param_file = open(os.path.join(OUTPUT_DIR, "params.txt"), 'a')
         param_file.close()
         
+        # make a folder for the videos
+        if not os.path.exists(compressed_data_file_name+"_video"):
+            os.makedirs(compressed_data_file_name+"_video")
+        
         
         
         for file in files_to_compress: # loop through all files to compress
