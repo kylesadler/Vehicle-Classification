@@ -84,8 +84,9 @@ def main():
         param_file.close()
         
         # make a folder for the videos
-        if not os.path.exists(compressed_data_file_name+"_video"):
-            os.makedirs(compressed_data_file_name+"_video")
+        video_dir = os.path.join(OUTPUT_DIR, compressed_data_file_name+"_video")
+        if not os.path.exists(video_dir):
+            os.makedirs(video_dir)
         
         
         
