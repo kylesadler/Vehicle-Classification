@@ -94,100 +94,6 @@ def main():
     for folder in folders_to_process:
         print("processing folder " + folder)
         process_folder(os.path.join(WORKING_DIR, folder))
-    
-def normalize_vehicle(v):
-    """ take in numpy array of vehicle data, normalize it, return numpy array of vehicle data """
-    return (v - np.min(v))/np.ptp(v)
-
-
-def vehicle_detected(a, MIN_DISTANCE_mm, MAX_DISTANCE_mm):
-    """ a is a 1 x N numpy array. method returns true if there is a vehicle 
-        expected_points is a 1 x N vector of the expected distance for each point
-    """
-    # return true if more 30% of the points are within MIN_DISTANCE_mm and MAX_DISTANCE_mm
-    return ((a > MIN_DISTANCE_mm) and (a < MAX_DISTANCE_mm)).sum() > a.size()*.3
-
-
-    
-def process_vehicle_signature(v):
-    """ given a numpy array of a vehicle image, process it """
-    # TODO crop vertically
-    # TODO slice timestamp off of end of each row (useless info) 
-    return normalize_vehicle(v)
-    
-def is_hdf5_file(file):
-    return file[-3:] == ".h5"
-
-def get_video_files(folder):
-    videos = []
-    for file in os.listdir(folder):
-        if(file[-len(VID_FILE_EXTENSION):] ==  VID_FILE_EXTENSION):
-            videos.append(os.path.join(folder, file))
-    
-    return videos
-
-def get_files(folder):
-    hdf5_files = []
-    vid_dirs = []
-    param_files = []
-    
-    for file in os.listdir(folder):
-        try:
-            if(os.isdir(file) and file[-6:] == "_video"): # is a video dir
-                vid_dirs.append(os.path.join(folder, file))
-            elif(is_hdf5_file(file)):
-                hdf5_files.append(os.path.join(folder, file))
-            elif(file[-11:] == "_params.txt"): # file is param file
-                param_files.append(os.path.join(folder, file))
-        except:
-            pass
-
-    return vid_dirs, hdf5_files, param_files
-    
-def get_related_files(root):
-    
-    """ return [[video_dir, h5 file, param file], [video_dir, h5 file, param file], ... ] """
-    vid_dirs, hdf5_files, param_files = get_files(root)
-    
-    for vid_dir in vid_dirs:
-        for hf in hdf5_files:
-            for pf in param_files:
-                try:
-                    if(vid_dir[:16] == hf[:16] and pf[:16]): # if YYYY-MM-DD-HHMMX matches on filenames (first 16 chars)
-                        file_pairs.append([vid_dir, hf, pf])
-                except:
-                    pass
-                
-    return file_pairs
-
-def get_folders_to_process(root):
-    """ returns folders in current dir with format 2018-10-02 UNPROCESSED/ and no corresponding 2018-10-02 PROCESSED/ """
-    
-    processed_folders, unprocessed_folders = search_processed_folders(root)
-    
-    folders = []
-    for un_folder in unprocessed_folders:
-        if(un_folder[:11] + un_folder[13:] not in processed_folders): # if file names share the same date
-            folders.append(un_folder)
-            
-    return folders
-
-def search_processed_folders(root):
-    
-    processed_folders = []
-    unprocessed_folders = []
-    
-    for file in os.listdir(root):
-        try:
-            if(os.path.isdir(os.path.join(root, file)) and file[-9:] == "PROCESSED"):
-                if(file[-10] == ' '):
-                    processed_folders.append(file)
-                elif(file[-12:-9] == " UN"):
-                    unprocessed_folders.append(file)
-        except:
-            pass
-            
-    return processed_folders, unprocessed_folders
 
 def process_folder(folder):
     """ given folder =  WORKING_DIR//YYYY-MM-DD UNPROCESSED//
@@ -207,6 +113,10 @@ def process_folder(folder):
     """
     # for multiple collections on the same date
     file_tuples = get_related_files(folder) # files[data_collection_num][file_type: 0 = video_dir, 1 = hdf5_file]
+    assert(len(file_tuples) != 0)
+    print("files to process: ")
+    for i in file_tuples:
+        print(i)
     
     for file_tuple in file_tuples:
         video_folder = file_tuple[0]  
@@ -214,7 +124,7 @@ def process_folder(folder):
         param_file = file_tuple[2]  
         print("processing files "+hdf5_file+", "+video_folder+", "+param_file)
         process_files(hdf5_file, video_folder, param_file)
-        
+
 def process_files(hdf5_file_path, video_folder_path, params_txt_path):
     """ 
         given:
@@ -367,7 +277,107 @@ def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_
                         
                         current_vehicle_signature = []
                         gap_count = 0
-                        
+ 
+ 
+
+def normalize_vehicle(v):
+    """ take in numpy array of vehicle data, normalize it, return numpy array of vehicle data """
+    return (v - np.min(v))/np.ptp(v)
+
+
+def vehicle_detected(a, MIN_DISTANCE_mm, MAX_DISTANCE_mm):
+    """ a is a 1 x N numpy array. method returns true if there is a vehicle 
+        expected_points is a 1 x N vector of the expected distance for each point
+    """
+    # return true if more 30% of the points are within MIN_DISTANCE_mm and MAX_DISTANCE_mm
+    return ((a > MIN_DISTANCE_mm) and (a < MAX_DISTANCE_mm)).sum() > a.size()*.3
+
+
+    
+def process_vehicle_signature(v):
+    """ given a numpy array of a vehicle image, process it """
+    # TODO crop vertically
+    # TODO slice timestamp off of end of each row (useless info) 
+    return normalize_vehicle(v)
+    
+def is_hdf5_file(file):
+    return file[-3:] == ".h5"
+
+def get_video_files(folder):
+    videos = []
+    for file in os.listdir(folder):
+        if(file[-len(VID_FILE_EXTENSION):] ==  VID_FILE_EXTENSION):
+            videos.append(os.path.join(folder, file))
+    
+    return videos
+
+def get_files(folder):
+    hdf5_files = []
+    vid_dirs = []
+    param_files = []
+    
+    for file in os.listdir(folder):
+        try:
+            file_path = os.path.join(folder, file)
+            if(os.path.isdir(file_path) and file[-6:] == "_video"): # is a video dir
+                print(file)
+                vid_dirs.append(file_path)
+            elif(is_hdf5_file(file)):
+                hdf5_files.append(file_path)
+            elif(file[-11:] == "_params.txt"): # file is param file
+                param_files.append(file_path)
+        except:
+            raise
+
+    return vid_dirs, hdf5_files, param_files
+    
+def get_related_files(root):
+    
+    """ return [[video_dir, h5 file, param file], [video_dir, h5 file, param file], ... ] """
+    vid_dirs, hdf5_files, param_files = get_files(root)
+    file_tuples = []
+    
+    for vid_dir in vid_dirs:
+        for hf in hdf5_files:
+            for pf in param_files:
+                print(vid_dir+', '+hf+', '+pf)
+                try:
+                    if(vid_dir[:16] == hf[:16] and pf[:16]): # if YYYY-MM-DD-HHMMX matches on filenames (first 16 chars)
+                        file_tuples.append([vid_dir, hf, pf])
+                except:
+                    pass
+                
+    return file_tuples
+
+def get_folders_to_process(root):
+    """ returns folders in current dir with format 2018-10-02 UNPROCESSED/ and no corresponding 2018-10-02 PROCESSED/ """
+    
+    processed_folders, unprocessed_folders = search_processed_folders(root)
+    
+    folders = []
+    for un_folder in unprocessed_folders:
+        if(un_folder[:11] + un_folder[13:] not in processed_folders): # if file names share the same date
+            folders.append(un_folder)
+            
+    return folders
+
+def search_processed_folders(root):
+    
+    processed_folders = []
+    unprocessed_folders = []
+    
+    for file in os.listdir(root):
+        try:
+            if(os.path.isdir(os.path.join(root, file)) and file[-9:] == "PROCESSED"):
+                if(file[-10] == ' '):
+                    processed_folders.append(file)
+                elif(file[-12:-9] == " UN"):
+                    unprocessed_folders.append(file)
+        except:
+            pass
+            
+    return processed_folders, unprocessed_folders
+      
 def save_to_hdf5(file, dset_name, dset_data):
     try: # to save the dataset
         file.create_dataset(dset_name, data=dset_data)
