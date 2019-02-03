@@ -116,7 +116,7 @@ def main():
             array_of_data = np.array([np.array(line) for line in compressed_data]) # convert list of lists to 2D numpy array
             compressed_data_file.create_dataset(dataset_name, data=array_of_data)
         except Exception as e:
-            log_error("could not create dataset: in " + compressed_data_file_name)
+            log_error("could not create dataset "+dataset_name+" in " + compressed_data_file_name)
             raise e
 
         for file in files_to_delete:
@@ -187,13 +187,14 @@ def parse_line(l):
     # get transmission parts
     transmission_parts = ascii_line.split(" ")
     
-    assert (len(transmission_parts) == 413), "line has incorrect data: " + l
-    
+    # this makes sure the line has the correct number of measurements
     num_data_points = int(transmission_parts[25], BASE_OF_DATA_POINTS)
     assert(len(transmission_parts)- 26 - 6 == num_data_points)
     
     # converts data_point in string with specified base to decimal int and add timestamp at end
-    return [int(point, BASE_OF_DATA_POINTS) for point in transmission_parts[26:-6]].append(timestamp)
+    output = [int(point, BASE_OF_DATA_POINTS) for point in transmission_parts[26:-6]]
+    output.append(timestamp)
+    return output
 
 def log_error(error_string):
     """ write string s to log file and screen """
