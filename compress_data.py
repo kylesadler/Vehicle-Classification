@@ -74,7 +74,10 @@ def main():
                 os.makedirs(OUTPUT_DIR)
         
             # make a blank params.txt file
-            param_file = open(os.path.join(OUTPUT_DIR, compressed_data_file_name + "_params.txt"), 'a')
+            param_file = open(os.path.join(OUTPUT_DIR, compressed_data_file_name + "_params.txt"), 'w')
+            param_file.write("video  start: \n")
+            param_file.write("max distance: \n")
+            param_file.write("min distance: ")
             param_file.close()
             
             # make a folder for the videos
