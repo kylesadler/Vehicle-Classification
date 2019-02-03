@@ -20,6 +20,7 @@ This module:
     
     | --> data/
         | --> 2018-10-02 UNPROCESSED/
+             | --> params.txt
              |
              | --> 2018-10-02-1437X.h5 (where X is RECORDING_LOCATION)
              | --> ...
@@ -78,6 +79,7 @@ def main():
     folders_to_process = get_folders_to_process(WORKING_DIR) # get folders to process
     
     for folder in folders_to_process:
+        print("processing folder " + folder)
         process_folder(os.path.join(WORKING_DIR, folder))
     
 def normalize_vehicle(v):
@@ -191,7 +193,7 @@ def process_folder(folder):
     for file_pair in file_pairs:
         video_folder = file_pair[0]  
         hdf5_file = file_pair[1]  
-        
+        print("processing files "+hdf5_file+", "+video_folder)
         process_files(hdf5_file, video_folder)
         
 def process_files(hdf5_file_path, video_folder_path):
@@ -263,7 +265,7 @@ def process_files(hdf5_file_path, video_folder_path):
     """       process all data        """
     """                               """
     """                               """
-
+    
     process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, recording_location, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5)
     
     

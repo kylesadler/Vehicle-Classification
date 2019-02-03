@@ -79,7 +79,9 @@ def main():
             log_error("could not create compressed data file: " + compressed_data_file_name)
             raise Exception("well shit")
         
-        
+        # make a blank params.txt file
+        param_file = open(os.path.join(OUTPUT_DIR, "params.txt"), 'a')
+        param_file.close()
         
         
         
