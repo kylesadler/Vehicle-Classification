@@ -20,7 +20,9 @@ This module:
     
     | --> data/
         | --> 2018-10-02 UNPROCESSED/
-             | --> params.txt
+             | --> 2018-10-02-1437X_params.txt
+             | --> ...
+             | --> YYYY-MM-DD-HHMMX_params.txt
              |
              | --> 2018-10-02-1437X.h5 (where X is RECORDING_LOCATION)
              | --> ...
@@ -176,6 +178,7 @@ def process_folder(folder):
     """ given folder =  WORKING_DIR//YYYY-MM-DD UNPROCESSED//
     
     | --> 2018-10-02 UNPROCESSED/
+             | --> 2018-10-02-1437X_params.txt
              | --> 2018-10-02-1437X.h5
              | --> 2018-10-02-1437X_video/ (corresponding movie for each capture)
                  | --> 0000.mov

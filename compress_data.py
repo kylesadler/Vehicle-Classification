@@ -73,21 +73,22 @@ def main():
             if not os.path.exists(OUTPUT_DIR): # make OUTPUT_DIR if it doesn't exist
                 os.makedirs(OUTPUT_DIR)
         
+            # make a blank params.txt file
+            param_file = open(os.path.join(OUTPUT_DIR, compressed_data_file_name + "_params.txt"), 'a')
+            param_file.close()
+            
+            # make a folder for the videos
+            video_dir = os.path.join(OUTPUT_DIR, compressed_data_file_name+"_video")
+            if not os.path.exists(video_dir):
+                os.makedirs(video_dir)
+        
+        
         try: # to initialize compressed_data_file
             compressed_data_file = h5py.File(os.path.join(OUTPUT_DIR, compressed_data_file_name + ".h5"), 'a')
         except:
             log_error("could not create compressed data file: " + compressed_data_file_name)
             raise Exception("well shit")
-        
-        # make a blank params.txt file
-        param_file = open(os.path.join(OUTPUT_DIR, "params.txt"), 'a')
-        param_file.close()
-        
-        # make a folder for the videos
-        video_dir = os.path.join(OUTPUT_DIR, compressed_data_file_name+"_video")
-        if not os.path.exists(video_dir):
-            os.makedirs(video_dir)
-        
+            
         
         
         for file in files_to_compress: # loop through all files to compress
