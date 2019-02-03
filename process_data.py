@@ -115,9 +115,10 @@ def get_video_files(folder):
     
     return videos
 
-def get_hdf5_and_vid_dir(folder):
+def get_files(folder):
     hdf5_files = []
     vid_dirs = []
+    param_files = []
     
     for file in os.listdir(folder):
         try:
@@ -125,23 +126,26 @@ def get_hdf5_and_vid_dir(folder):
                 vid_dirs.append(os.path.join(folder, file))
             elif(is_hdf5_file(file)):
                 hdf5_files.append(os.path.join(folder, file))
+            elif(file[-11:] == "_params.txt"): # file is param file
+                param_files.append(os.path.join(folder, file))
         except:
             pass
 
-    return vid_dirs, hdf5_files
+    return vid_dirs, hdf5_files, param_files
     
-def get_file_pairs(root):
+def get_related_files(root):
     
-    """ return [[video_dir, h5 file], [video_dir, h5 file], ... ] """
-    vid_dirs, hdf5_files = get_hdf5_and_vid_dir(root)
+    """ return [[video_dir, h5 file, param file], [video_dir, h5 file, param file], ... ] """
+    vid_dirs, hdf5_files, param_files = get_files(root)
     
     for vid_dir in vid_dirs:
         for hf in hdf5_files:
-            try:
-                if(vid_dir[:16] == hf[:16]): # if YYYY-MM-DD-HHMMX matches on filenames (first 16 chars)
-                    file_pairs.append([vid_dir, hf])
-            except:
-                pass
+            for pf in param_files:
+                try:
+                    if(vid_dir[:16] == hf[:16] and pf[:16]): # if YYYY-MM-DD-HHMMX matches on filenames (first 16 chars)
+                        file_pairs.append([vid_dir, hf, pf])
+                except:
+                    pass
                 
     return file_pairs
 
@@ -191,7 +195,7 @@ def process_folder(folder):
     
     """
     # for multiple collections on the same date
-    file_pairs = get_file_pairs(folder) # files[data_collection_num][file_type: 0 = video_dir, 1 = hdf5_file]
+    file_pairs = get_related_files(folder) # files[data_collection_num][file_type: 0 = video_dir, 1 = hdf5_file]
     
     for file_pair in file_pairs:
         video_folder = file_pair[0]  
