@@ -13,6 +13,17 @@ This module:
     This module works for both 1D and 2D (scanning) lidar data
     
     
+    steps: 
+    set lidar to output data into a folder called raw_data (this can be changed)
+    run compress_data.py with the correct recording location
+    move created folder onto main machine in a working directory
+    for each params.txt file, enter the associated parameters
+    put the associated video files in respective video folders
+    put process_data.py in the working directory
+    run process_data.py
+    upload csv output file to database
+    
+    
     2D lidar
     
     time is vertical starting with earliest time
