@@ -195,15 +195,16 @@ def process_folder(folder):
     
     """
     # for multiple collections on the same date
-    file_pairs = get_related_files(folder) # files[data_collection_num][file_type: 0 = video_dir, 1 = hdf5_file]
+    file_tuples = get_related_files(folder) # files[data_collection_num][file_type: 0 = video_dir, 1 = hdf5_file]
     
-    for file_pair in file_pairs:
-        video_folder = file_pair[0]  
-        hdf5_file = file_pair[1]  
-        print("processing files "+hdf5_file+", "+video_folder)
-        process_files(hdf5_file, video_folder)
+    for file_tuple in file_tuples:
+        video_folder = file_tuple[0]  
+        hdf5_file = file_tuple[1]  
+        param_file = file_tuple[2]  
+        print("processing files "+hdf5_file+", "+video_folder+", "+param_file)
+        process_files(hdf5_file, video_folder, param_file)
         
-def process_files(hdf5_file_path, video_folder_path):
+def process_files(hdf5_file_path, video_folder_path, params_txt_path):
     """ 
         given:
         
@@ -266,6 +267,8 @@ def process_files(hdf5_file_path, video_folder_path):
     if not os.path.exists(output_photo_folder_path):
         os.makedirs(output_photo_folder_path)
     
+    # open params.txt file
+    params_file = open(params_txt_path, 'r')
     
     """                               """
     """                               """
@@ -273,7 +276,7 @@ def process_files(hdf5_file_path, video_folder_path):
     """                               """
     """                               """
     
-    process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, recording_location, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5)
+    process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, recording_location, params_file, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5)
     
     
     """                               """
@@ -285,7 +288,7 @@ def process_files(hdf5_file_path, video_folder_path):
     output_database_csv.close()
     output_lidar_signature_hdf5.close()
 
-def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, recording_location, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5):
+def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_paths, recording_location, params_file, output_database_csv, output_photo_folder_path, output_lidar_signature_hdf5):
     """
         given:
             
@@ -303,9 +306,9 @@ def process_data(input_lidar_data_hdf5, input_lidar_data_keys, input_video_file_
             photos of vehicles in output_photo_folder_path
     """
     
-    video_start = input("enter video start time for "+video_folder+" in HHMMSSmmm form:")
-    MAX_DISTANCE_mm = input("enter max distance for "+video_folder+" in mm:")
-    MIN_DISTANCE_mm = input("enter max distance for "+video_folder+" in mm:")
+    video_start = params_file.readline().split(":")[1].strip()
+    MAX_DISTANCE_mm = params_file.readline().split(":")[1].strip()
+    MIN_DISTANCE_mm = params_file.readline().split(":")[1].strip()
 
     
     
