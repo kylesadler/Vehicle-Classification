@@ -169,7 +169,8 @@ def process_files(hdf5_file_path, video_folder_path, params_txt_path):
     
     # open input hdf5 file -- stores compressed lidar data
     input_lidar_data_hdf5 = h5py.File(hdf5_file_path, 'r')
-    input_lidar_data_keys = input_lidar_data_hdf5.keys()
+    input_lidar_data_keys = list(input_lidar_data_hdf5.keys())
+    #print(input_lidar_data_keys)
     input_lidar_data_keys.sort() # ensure that keys are processed in order
     
     # make output csv file -- (stores vehcile_ID, label)
@@ -319,7 +320,6 @@ def get_files(folder):
         try:
             file_path = os.path.join(folder, file)
             if(os.path.isdir(file_path) and file[-6:] == "_video"): # is a video dir
-                print(file)
                 vid_dirs.append(file_path)
             elif(is_hdf5_file(file)):
                 hdf5_files.append(file_path)
@@ -392,9 +392,7 @@ def save_to_csv(file, string):
         print("could not write '" +string +"' to csv file: " + file.name)
         #print(repr(e))
         raise e
-
-if __name__ == "__main__":
-    main()
+    
     
     
 # keeps track of video traversal
@@ -451,6 +449,12 @@ class video_parser:
         minutes = int(time[2:4]) + hours*60
         sec = int(time[4:6]) + minutes*60
         return int(time[6:])/1000 + sec
+    
+    
+    
+    
+if __name__ == "__main__":
+    main()
     
     
     
