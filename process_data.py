@@ -113,10 +113,9 @@ def process_folder(folder):
     """
     # for multiple collections on the same date
     file_tuples = get_related_files(folder) # files[data_collection_num][file_type: 0 = video_dir, 1 = hdf5_file]
-    assert(len(file_tuples) != 0)
-    print("files to process: ")
-    for i in file_tuples:
-        print(i)
+    if(len(file_tuples) == 0):
+        print("nothing to process in folder "+folder)
+        return
     
     for file_tuple in file_tuples:
         video_folder = file_tuple[0]  
@@ -340,9 +339,9 @@ def get_related_files(root):
     for vid_dir in vid_dirs:
         for hf in hdf5_files:
             for pf in param_files:
-                print(vid_dir+', '+hf+', '+pf)
                 try:
-                    if(vid_dir[:16] == hf[:16] and pf[:16]): # if YYYY-MM-DD-HHMMX matches on filenames (first 16 chars)
+                    #print(vid_dir[:41]+', '+hf[:41]+', '+pf[:41])
+                    if(vid_dir[:41] == hf[:41] and pf[:41] == hf[:41]): # if YYYY-MM-DD-HHMMX matches on filenames (first 16 chars)
                         file_tuples.append([vid_dir, hf, pf])
                 except:
                     pass
