@@ -109,7 +109,8 @@ def main():
                 try: # to compress line
                     compressed_data.append(parse_line(line))
                 except Exception as e:
-                    log_warning("could not parse line in file: " + input_file.name + ": " + line)
+                    log_warning("could not parse line in file: " + input_file.name)
+                    #raise e
                 
                 line = input_file.readline()
                     
@@ -133,6 +134,7 @@ def main():
         for file in files_to_delete:
             try: # to delete used raw data files
                 os.remove(os.path.join(INPUT_DIR, file))
+                #print("done.")
             except Exception as e:
                 #print(repr(e))
                 log_warning("could not delete raw data file: " + file)
@@ -184,26 +186,30 @@ def parse_line(l):
     
     # transmission type is sSN LMDscandata CoLa A Hex
     # telegram is hex --> convert to ascii --> convert to hex
-    
+
     timestamp = int(l[:19].replace(":","").replace(".","").replace("-","").replace(" ",""))
     
     index = l.index("<") # get first < in line
     line = l[index:].replace('<',"").replace(">","")
     
-    
     # convert line from hex to ascii
-    ascii_line = bytes.fromhex(line).decode('ASCII')
+    ascii_line = bytes.fromhex(line).decode('ASCII')[1:-1]  # remove opening and closing chars
     #print(ascii_line)
     
     # get transmission parts
     transmission_parts = ascii_line.split(" ")
+    index_num_data = transmission_parts.index("DIST1") + 5
+
+    num_data_points = int(transmission_parts[index_num_data], BASE_OF_DATA_POINTS)
+    
+    #print(transmission_parts)
+    data_points = transmission_parts[index_num_data+1: index_num_data+1 + num_data_points]
     
     # this makes sure the line has the correct number of measurements
-    num_data_points = int(transmission_parts[25], BASE_OF_DATA_POINTS)
-    assert(len(transmission_parts)- 26 - 6 == num_data_points)
+    assert(len(data_points) == num_data_points)
     
     # converts data_point in string with specified base to decimal int and add timestamp at end
-    output = [int(point, BASE_OF_DATA_POINTS) for point in transmission_parts[26:-6]]
+    output = [int(point, BASE_OF_DATA_POINTS) for point in data_points]
     output.append(timestamp)
     return output
 
