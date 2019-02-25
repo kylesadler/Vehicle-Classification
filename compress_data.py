@@ -27,11 +27,13 @@ from time import sleep
 from datetime import datetime
 import numpy as np
 import h5py
+from natsort import natsorted, ns
+
 
 ###	params to configure	###
 RECORDING_LOCATION = 0	# if unsure of your recording location number, talk to Dr. Hernandez
 INPUT_DIR = "raw_data"	# lidar outputs raw data files into this directory
-MIN_TO_SLEEP = 0.01; 	# time to let files complete writing before processing, 2x lidar output interval suggested
+MIN_TO_SLEEP = 6; 	# time to let files complete writing before processing, > lidar output interval suggested
 ERRORS_ONLY = False	# prints and logs only errors (ignores warnings) if true
 ###################################
 
@@ -61,7 +63,7 @@ def main():
         sleep(60 * MIN_TO_SLEEP);
 
             
-        files_to_compress.sort() # ensures that data is in correct order
+        files_to_compress = natsorted(files_to_compress, key=lambda y: y.lower()) # ensures that data is in correct order
         dataset_name = get_name(files_to_compress[0]) # store each dataset as the earliest timestamp of the file batch
         compressed_data = [] # data for the entire loop of files
         files_to_delete =[]
